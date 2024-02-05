@@ -18,7 +18,8 @@ type Shader struct {
 	// Enabled reports whether this shader will be used during the rendering.
 	Enabled bool
 
-	// Textures are used as ebiten.DrawRectShaderOptions.Images[i] values.
+	// Textures are used as ebiten.DrawRectShaderOptions.Images[i] values,
+	// where i is the suffix of the field (Texture1 => 1, Texture2 => 2).
 	// The graphics object that owns this Shader will be assigned to Images[0].
 
 	Texture1 *ebiten.Image
