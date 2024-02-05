@@ -72,8 +72,6 @@ const (
 // * Visible=true
 // * ScaleX and ScaleY are 1
 // * The ColorScale is {1, 1, 1, 1}
-//
-// A nil cache is allowed: no caching will be performed.
 func NewSprite(cache *Cache) *Sprite {
 	return &Sprite{
 		cache:            cache,
@@ -167,16 +165,16 @@ func (s *Sprite) SetAlpha(a float32) {
 	s.ebitenColorScale = s.colorScale.toEbitenColorScale()
 }
 
-// IsDisposed reports whether this sprite is marked for deletion.
-// IsDisposed returns true only after Disposed was called on this sprite.
-func (s *Sprite) IsDisposed() bool { return s.getFlag(spriteFlagDisposed) }
-
 // Dispose marks this sprite for deletion.
 // After calling this method, IsDisposed will report true.
 //
 // Note that it's up to the scene to actually detach this sprite.
 // This method only sets a flag but doesn't delete anything.
 func (s *Sprite) Dispose() { s.flags |= spriteFlagDisposed }
+
+// IsDisposed reports whether this sprite is marked for deletion.
+// IsDisposed returns true only after Disposed was called on this sprite.
+func (s *Sprite) IsDisposed() bool { return s.getFlag(spriteFlagDisposed) }
 
 // IsCentered reports whether Centered flag is set.
 // Use SetCentered to change this flag value.
@@ -190,16 +188,16 @@ func (s *Sprite) IsCentered() bool { return s.getFlag(spriteFlagCentered) }
 func (s *Sprite) SetCentered(centered bool) { s.setFlag(spriteFlagCentered, centered) }
 
 // IsVisible reports whether this sprite is visible.
-// Use SetVisible to change this flag value.
+// Use SetVisibility to change this flag value.
 //
 // When sprite is invisible (visible=false), its image will not be rendered at all.
 // This is an efficient way to temporarily hide a sprite.
 func (s *Sprite) IsVisible() bool { return s.getFlag(spriteFlagVisible) }
 
-// SetVisible changes the Visible flag value.
+// SetVisibility changes the Visible flag value.
 // It can be used to show or hide the sprite.
 // Use IsVisible to get the current flag value.
-func (s *Sprite) SetVisible(visible bool) { s.setFlag(spriteFlagVisible, visible) }
+func (s *Sprite) SetVisibility(visible bool) { s.setFlag(spriteFlagVisible, visible) }
 
 // IsHorizontallyFlipped reports whether HorizontalFlip flag is set.
 // Use SetHorizontalFlip to change this flag value.
