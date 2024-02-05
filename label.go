@@ -150,7 +150,7 @@ func (l *Label) GetAlignVertical() AlignVertical {
 
 func (l *Label) SetAlignVertical(a AlignVertical) {
 	l.flags &^= labelFlagAlignVerticalBit1 | labelFlagAlignVerticalBit2
-	l.flags |= labelFlag(a&0b11) << 2
+	l.flags |= labelFlag(a&0b11) << 1
 }
 
 func (l *Label) GetAlignHorizontal() AlignHorizontal {
@@ -159,7 +159,7 @@ func (l *Label) GetAlignHorizontal() AlignHorizontal {
 
 func (l *Label) SetAlignHorizontal(a AlignHorizontal) {
 	l.flags &^= labelFlagAlignHorizontalBit1 | labelFlagAlignHorizontalBit2
-	l.flags |= labelFlag(a&0b11) << 4
+	l.flags |= labelFlag(a&0b11) << 3
 }
 
 func (l *Label) GetGrowVertical() GrowVertical {
@@ -168,7 +168,7 @@ func (l *Label) GetGrowVertical() GrowVertical {
 
 func (l *Label) SetGrowVertical(g GrowVertical) {
 	l.flags &^= labelFlagGrowVerticalBit1 | labelFlagGrowVerticalBit2
-	l.flags |= labelFlag(g&0b11) << 6
+	l.flags |= labelFlag(g&0b11) << 5
 }
 
 func (l *Label) GetGrowHorizontal() GrowHorizontal {
@@ -177,7 +177,7 @@ func (l *Label) GetGrowHorizontal() GrowHorizontal {
 
 func (l *Label) SetGrowHorizontal(g GrowHorizontal) {
 	l.flags &^= labelFlagGrowHorizontalBit1 | labelFlagGrowHorizontalBit2
-	l.flags |= labelFlag(g&0b11) << 8
+	l.flags |= labelFlag(g&0b11) << 7
 }
 
 func (l *Label) IsVisible() bool {
