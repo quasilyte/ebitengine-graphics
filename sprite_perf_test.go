@@ -5,7 +5,7 @@ import (
 )
 
 func BenchmarkSpriteBoundsRectCentered(b *testing.B) {
-	s := NewSprite()
+	s := NewSprite(nil)
 	s.SetCentered(true)
 	for i := 0; i < b.N; i++ {
 		_ = s.BoundsRect()
@@ -13,7 +13,7 @@ func BenchmarkSpriteBoundsRectCentered(b *testing.B) {
 }
 
 func BenchmarkSpriteBoundsRect(b *testing.B) {
-	s := NewSprite()
+	s := NewSprite(nil)
 	s.SetCentered(false)
 	for i := 0; i < b.N; i++ {
 		_ = s.BoundsRect()
