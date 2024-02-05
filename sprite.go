@@ -80,6 +80,28 @@ func NewSprite() *Sprite {
 	}
 }
 
+// BoundsRect returns the properly positioned image containing rectangle.
+//
+// This is useful when trying to calculate whether this sprite is contained
+// inside some area or not (like a camera view area).
+//
+// The bounding rectangle can't be used for collisions since it treats
+// the frame size as an object size.
+func (s *Sprite) BoundsRect() gmath.Rect {
+	pos := s.Pos.Resolve()
+	if s.IsCentered() {
+		offset := gmath.Vec{X: float64(s.frameWidth / 2), Y: float64(s.frameHeight / 2)}
+		return gmath.Rect{
+			Min: pos.Sub(offset),
+			Max: pos.Add(offset),
+		}
+	}
+	return gmath.Rect{
+		Min: pos,
+		Max: pos.Add(gmath.Vec{X: float64(s.frameWidth), Y: float64(s.frameHeight)}),
+	}
+}
+
 // ImageSize returns the bound image width and height.
 func (s *Sprite) ImageSize() (w, h int) {
 	bounds := s.image.Bounds()
