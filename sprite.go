@@ -265,14 +265,14 @@ func (s *Sprite) SetImage(img *ebiten.Image) {
 // This method is a shorthand to DrawWithOffset(dst, {})
 // which also implements the gscene.Graphics interface.
 //
-// See DrawWithOffset for more info.
+// See DrawWithOptions for more info.
 func (s *Sprite) Draw(dst *ebiten.Image) {
-	s.DrawWithOffset(dst, gmath.Vec{})
+	s.DrawWithOptions(dst, DrawOptions{})
 }
 
 // DrawWithOffset renders the associated image onto the provided dst image
 // while also using the extra provided offset.
-func (s *Sprite) DrawWithOffset(screen *ebiten.Image, offset gmath.Vec) {
+func (s *Sprite) DrawWithOptions(screen *ebiten.Image, opts DrawOptions) {
 	// Calculations that are expensive to re-calculate on every Draw call
 	// should be memorized inside Sprite object.
 	// Otherwise we should make compute it here to avoid making Sprite object too big.
@@ -301,16 +301,21 @@ func (s *Sprite) DrawWithOffset(screen *ebiten.Image, offset gmath.Vec) {
 		origin = gmath.Vec{X: float64(s.frameWidth / 2), Y: float64(s.frameHeight / 2)}
 	}
 
+	targetRotation := opts.Rotation
+	if s.Rotation != nil {
+		targetRotation += *s.Rotation
+	}
+
 	// The rotation and scaling should be done around the origin point.
 	drawOptions.GeoM.Translate(-origin.X, -origin.Y)
-	if s.Rotation != nil {
-		drawOptions.GeoM.Rotate(float64(*s.Rotation))
+	if targetRotation != 0 {
+		drawOptions.GeoM.Rotate(float64(targetRotation))
 	}
 	if s.scaleX != 1 || s.scaleY != 1 {
 		drawOptions.GeoM.Scale(s.scaleX, s.scaleY)
 	}
 
-	pos := offset.Add(s.Pos.Resolve())
+	pos := opts.Offset.Add(s.Pos.Resolve())
 	drawOptions.GeoM.Translate(pos.X, pos.Y)
 
 	// Making a sub-image can be more expensive than we would like it
