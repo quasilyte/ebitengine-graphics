@@ -19,6 +19,7 @@ type Container struct {
 func NewContainer() *Container {
 	return &Container{
 		objects: make([]object, 0, 4),
+		visible: true,
 	}
 }
 
