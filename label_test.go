@@ -4,7 +4,7 @@ import (
 	"testing"
 	"unsafe"
 
-	graphics "github.com/quasilyte/gscene-graphics"
+	graphics "github.com/quasilyte/ebitengine-graphics"
 )
 
 func TestLabelSize(t *testing.T) {
