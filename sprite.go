@@ -277,7 +277,11 @@ func (s *Sprite) SetImage(img *ebiten.Image) {
 // Then you can use a frame sprite to apply some effects (like VerticalFlip)
 // and render it to an ImageBuilder using DrawSprite.
 func (s *Sprite) ExportFrame(dst *Sprite, offset gmath.Vec) {
-	*dst = Sprite{}
+	*dst = Sprite{
+		colorScale:       s.colorScale,
+		ebitenColorScale: s.ebitenColorScale,
+		cache:            s.cache,
+	}
 	dst.SetImage(s.image)
 	dst.SetVisibility(true)
 	dst.SetCentered(false)
