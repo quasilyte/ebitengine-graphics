@@ -260,31 +260,6 @@ func (s *Sprite) SetImage(img *ebiten.Image) {
 	s.flags |= spriteFlagSubImageChanged
 }
 
-// ExportFrame assigns a frame out of s into dst.
-// It's useful when using s as a texture/atlas.
-//
-// This function expects sprite's (s) FrameWidth and FrameHeight to
-// be already set.
-//
-// dst will be initialized to the Frame-like view to the sprite.
-// In particular, it's image, frame size and offset will be adjusted.
-//
-// You can use a stack-allocated Sprite object with this function:
-//
-//		var frame graphics.Sprite
-//	 texture.ExportFrame(&frame, offset)
-//
-// Then you can use a frame sprite to apply some effects (like VerticalFlip)
-// and render it to an ImageBuilder using DrawSprite.
-func (s *Sprite) ExportFrame(dst *Sprite, offset gmath.Vec) {
-	*dst = *s
-	dst.SetImage(s.image)
-	dst.SetVisibility(true)
-	dst.SetCentered(false)
-	dst.SetFrameSize(s.GetFrameSize())
-	dst.SetFrameOffset(int(offset.X), int(offset.Y))
-}
-
 // Draw renders the associated image onto the provided dst image.
 //
 // This method is a shorthand to DrawWithOffset(dst, {})
