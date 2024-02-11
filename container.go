@@ -52,6 +52,10 @@ func (c *Container) Draw(dst *ebiten.Image) {
 	c.DrawWithOptions(dst, DrawOptions{})
 }
 
+func (c *Container) AddChild(o object) {
+	c.objects = append(c.objects, o)
+}
+
 func (c *Container) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	if !c.visible {
 		return
