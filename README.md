@@ -1,5 +1,8 @@
 # ebitengine-graphics
 
+![Build Status](https://github.com/quasilyte/ebitengine-graphics/workflows/Go/badge.svg)
+[![PkgGoDev](https://pkg.go.dev/badge/mod/github.com/quasilyte/ebitengine-graphics)](https://pkg.go.dev/mod/github.com/quasilyte/ebitengine-graphics)
+
 ## Overview
 
 A package implementing various graphics primitives like Sprite for [Ebitengine](https://github.com/hajimehoshi/ebiten/).
