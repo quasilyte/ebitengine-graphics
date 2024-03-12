@@ -7,6 +7,14 @@ import (
 
 var borderBoxIndices = []uint16{0, 2, 4, 2, 4, 6, 1, 3, 5, 3, 5, 7}
 
+// Rect is a rectangle graphical primitive.
+//
+// Depending on the configuration, it's one of these:
+//   - Fill-only rectangle
+//   - Outline-only rectangle
+//   - Fill+outline rectangle
+//
+// If you need a "texture rect", use a sprite instead.
 type Rect struct {
 	// Pos is a rect location binder.
 	// See Pos documentation to learn how it works.
@@ -40,6 +48,9 @@ type Rect struct {
 // * The OutlineColorScale is {0, 0, 0, 0} (invisible)
 // * OutlineWidth is 1 (but the default outline color is invisible)
 func NewRect(cache *Cache, width, height float64) *Rect {
+	// Cache is not used yet, but it's our way to keep the API stable
+	// while keeping the optimization opportunities.
+	// It's also consistent with other constructor functions.
 	return &Rect{
 		visible:           true,
 		centered:          true,
@@ -146,13 +157,13 @@ func (rect *Rect) SetOutlineColorScale(cs ColorScale) {
 // which also implements the gscene.Graphics interface.
 //
 // See DrawWithOptions for more info.
-func (rect *Rect) Draw(screen *ebiten.Image) {
-	rect.DrawWithOffset(screen, gmath.Vec{})
+func (rect *Rect) Draw(dst *ebiten.Image) {
+	rect.DrawWithOffset(dst, gmath.Vec{})
 }
 
 // DrawWithOffset renders the rect onto the provided dst image
 // while also using the extra provided offset.
-func (rect *Rect) DrawWithOffset(screen *ebiten.Image, offset gmath.Vec) {
+func (rect *Rect) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
 	if !rect.visible {
 		return
 	}
@@ -172,26 +183,26 @@ func (rect *Rect) DrawWithOffset(screen *ebiten.Image, offset gmath.Vec) {
 		var drawOptions ebiten.DrawImageOptions
 		drawOptions.GeoM = rect.calculateGeom(rect.width, rect.height, finalOffset)
 		drawOptions.ColorScale = rect.fillColorScale.toEbitenColorScale()
-		screen.DrawImage(whitePixel, &drawOptions)
+		dst.DrawImage(whitePixel, &drawOptions)
 		return
 	}
 
 	if rect.fillColorScale.A == 0 && rect.outlineWidth >= 1 {
 		// Outline-only mode.
-		rect.drawOutline(screen, finalOffset)
+		rect.drawOutline(dst, finalOffset)
 		return
 	}
 
-	rect.drawOutline(screen, finalOffset)
+	rect.drawOutline(dst, finalOffset)
 
 	var drawOptions ebiten.DrawImageOptions
 	drawOptions.GeoM.Scale(rect.width-rect.outlineWidth*2, rect.height-rect.outlineWidth*2)
 	drawOptions.GeoM.Translate(rect.outlineWidth+finalOffset.X, rect.outlineWidth+finalOffset.Y)
 	drawOptions.ColorScale = rect.fillColorScale.toEbitenColorScale()
-	screen.DrawImage(whitePixel, &drawOptions)
+	dst.DrawImage(whitePixel, &drawOptions)
 }
 
-func (rect *Rect) drawOutline(screen *ebiten.Image, offset gmath.Vec) {
+func (rect *Rect) drawOutline(dst *ebiten.Image, offset gmath.Vec) {
 	if rect.outlineVertices == nil {
 		// Allocate these vertices lazily when we need them and then re-use them.
 		rect.outlineVertices = new([8]ebiten.Vertex)
@@ -275,7 +286,7 @@ func (rect *Rect) drawOutline(screen *ebiten.Image, offset gmath.Vec) {
 	options := ebiten.DrawTrianglesOptions{
 		FillRule: ebiten.EvenOdd,
 	}
-	screen.DrawTriangles(rect.outlineVertices[:], borderBoxIndices, whitePixel, &options)
+	dst.DrawTriangles(rect.outlineVertices[:], borderBoxIndices, whitePixel, &options)
 }
 
 func (rect *Rect) calculateFinalOffset(offset gmath.Vec) gmath.Vec {

@@ -205,11 +205,11 @@ func (l *Label) BoundsRect() gmath.Rect {
 	return l.containerRect(l.Pos.Resolve())
 }
 
-func (l *Label) Draw(screen *ebiten.Image) {
-	l.DrawWithOffset(screen, gmath.Vec{})
+func (l *Label) Draw(dst *ebiten.Image) {
+	l.DrawWithOffset(dst, gmath.Vec{})
 }
 
-func (l *Label) DrawWithOffset(screen *ebiten.Image, offset gmath.Vec) {
+func (l *Label) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
 	if !l.IsVisible() || l.text == "" {
 		return
 	}
@@ -241,7 +241,7 @@ func (l *Label) DrawWithOffset(screen *ebiten.Image, offset gmath.Vec) {
 	if l.GetAlignHorizontal() == AlignHorizontalLeft {
 		drawOptions.GeoM.Translate(math.Round(pos.X), math.Round(pos.Y))
 		drawOptions.GeoM.Translate(offset.X, offset.Y)
-		text.DrawWithOptions(screen, l.text, fontInfo.ff, &drawOptions)
+		text.DrawWithOptions(dst, l.text, fontInfo.ff, &drawOptions)
 		return
 	}
 
@@ -266,7 +266,7 @@ func (l *Label) DrawWithOffset(screen *ebiten.Image, offset gmath.Vec) {
 		drawOptions.GeoM.Reset()
 		drawOptions.GeoM.Translate(math.Round(pos.X+offsetX), math.Round(pos.Y+offsetY))
 		drawOptions.GeoM.Translate(offset.X, offset.Y)
-		text.DrawWithOptions(screen, lineText, fontInfo.ff, &drawOptions)
+		text.DrawWithOptions(dst, lineText, fontInfo.ff, &drawOptions)
 		if nextLine == -1 {
 			break
 		}

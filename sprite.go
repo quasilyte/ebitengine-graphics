@@ -272,7 +272,7 @@ func (s *Sprite) Draw(dst *ebiten.Image) {
 
 // DrawWithOffset renders the associated image onto the provided dst image
 // while also using the extra provided offset.
-func (s *Sprite) DrawWithOptions(screen *ebiten.Image, opts DrawOptions) {
+func (s *Sprite) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	// Calculations that are expensive to re-calculate on every Draw call
 	// should be memorized inside Sprite object.
 	// Otherwise we should make compute it here to avoid making Sprite object too big.
@@ -333,7 +333,7 @@ func (s *Sprite) DrawWithOptions(screen *ebiten.Image, opts DrawOptions) {
 	}
 
 	if s.Shader == nil || !s.Shader.Enabled {
-		screen.DrawImage(srcImage, &drawOptions)
+		dst.DrawImage(srcImage, &drawOptions)
 		return
 	}
 
@@ -346,7 +346,7 @@ func (s *Sprite) DrawWithOptions(screen *ebiten.Image, opts DrawOptions) {
 	options.Images[2] = s.Shader.Texture2
 	options.Images[3] = s.Shader.Texture3
 	options.Uniforms = s.Shader.shaderData
-	screen.DrawRectShader(srcImageBounds.Dx(), srcImageBounds.Dy(), s.Shader.compiled, &options)
+	dst.DrawRectShader(srcImageBounds.Dx(), srcImageBounds.Dy(), s.Shader.compiled, &options)
 }
 
 func (s *Sprite) updateSubImage() {
