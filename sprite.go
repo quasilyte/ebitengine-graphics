@@ -323,7 +323,7 @@ func (s *Sprite) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	// only when subimage reslicing might be needed.
 	// https://github.com/hajimehoshi/ebiten/issues/2902
 	if s.getFlag(spriteFlagSubImageChanged) {
-		s.clearFlag(spriteFlagSubImageChanged)
+		clearFlag(&s.flags, spriteFlagSubImageChanged)
 		s.updateSubImage()
 	}
 
@@ -374,17 +374,9 @@ func (s *Sprite) updateSubImage() {
 }
 
 func (s *Sprite) getFlag(f spriteFlag) bool {
-	return s.flags&f != 0
+	return getFlag(s.flags, f)
 }
 
 func (s *Sprite) setFlag(f spriteFlag, v bool) {
-	if v {
-		s.flags |= f
-	} else {
-		s.clearFlag(f)
-	}
-}
-
-func (s *Sprite) clearFlag(f spriteFlag) {
-	s.flags &^= f
+	setFlag(&s.flags, f, v)
 }

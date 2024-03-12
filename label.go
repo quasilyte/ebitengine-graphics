@@ -188,7 +188,7 @@ func (l *Label) IsVisible() bool {
 // It can be used to show or hide the label.
 // Use IsVisible to get the current flag value.
 func (l *Label) SetVisibility(visible bool) {
-	l.flags |= labelFlagVisible
+	setFlag(&l.flags, labelFlagVisible, visible)
 }
 
 func (l *Label) SetText(s string) {
@@ -196,7 +196,7 @@ func (l *Label) SetText(s string) {
 
 	fontInfo := l.cache.fontInfoList[l.fontID]
 
-	bounds := text.BoundString(fontInfo.ff, l.text)
+	bounds := text.BoundString(fontInfo.ff, l.text) //nolint (font.BoundString is different)
 	l.boundsWidth = uint16(bounds.Dx())
 	l.boundsHeight = uint16(bounds.Dy())
 }
@@ -254,7 +254,7 @@ func (l *Label) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
 			lineText = textRemaining[:nextLine]
 			textRemaining = textRemaining[nextLine+len("\n"):]
 		}
-		lineBounds := text.BoundString(fontInfo.ff, lineText)
+		lineBounds := text.BoundString(fontInfo.ff, lineText) //nolint (font.BoundString is different)
 		lineBoundsWidth := float64(lineBounds.Dx())
 		offsetX := 0.0
 		switch l.GetAlignHorizontal() {

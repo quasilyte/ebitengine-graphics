@@ -47,7 +47,7 @@ type Rect struct {
 // * The FillColorScale is {1, 1, 1, 1}
 // * The OutlineColorScale is {0, 0, 0, 0} (invisible)
 // * OutlineWidth is 1 (but the default outline color is invisible)
-func NewRect(cache *Cache, width, height float64) *Rect {
+func NewRect(_ *Cache, width, height float64) *Rect {
 	// Cache is not used yet, but it's our way to keep the API stable
 	// while keeping the optimization opportunities.
 	// It's also consistent with other constructor functions.
@@ -211,10 +211,10 @@ func (rect *Rect) drawOutline(dst *ebiten.Image, offset gmath.Vec) {
 	borderWidth := float32(rect.outlineWidth)
 	x := float32(offset.X)
 	y := float32(offset.Y)
-	r := float32(rect.outlineColorScale.R)
-	g := float32(rect.outlineColorScale.G)
-	b := float32(rect.outlineColorScale.B)
-	a := float32(rect.outlineColorScale.A)
+	r := rect.outlineColorScale.R
+	g := rect.outlineColorScale.G
+	b := rect.outlineColorScale.B
+	a := rect.outlineColorScale.A
 	width := float32(rect.width)
 	height := float32(rect.height)
 
