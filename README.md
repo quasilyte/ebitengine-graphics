@@ -112,7 +112,7 @@ func (c *exampleController) Init(scene *gscene.SimpleRootScene) {
 		l := graphics.NewLine(g.graphicsCache, from, to)
 		l.SetWidth(2)
 		l.SetColorScale(graphics.ColorScaleFromRGBA(200, 100, 100, 255))
-        scene.AddGraphics(l)
+		scene.AddGraphics(l)
 	}
 
 	{
@@ -121,7 +121,7 @@ func (c *exampleController) Init(scene *gscene.SimpleRootScene) {
 		r.SetFillColorScale(graphics.RGB(0xAABB00))
 		r.SetOutlineColorScale(graphics.RGB(0x0055ff))
 		r.SetOutlineWidth(2)
-        scene.AddGraphics(r)
+		scene.AddGraphics(r)
 	}
 }
 ```
