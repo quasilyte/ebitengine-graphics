@@ -115,6 +115,22 @@ func (rect *Rect) IsVisible() bool { return rect.visible }
 // Use IsVisible to get the current flag value.
 func (rect *Rect) SetVisibility(visible bool) { rect.visible = visible }
 
+func (rect *Rect) GetWidth() float64 {
+	return rect.width
+}
+
+func (rect *Rect) SetWidth(w float64) {
+	rect.width = w
+}
+
+func (rect *Rect) GetHeight() float64 {
+	return rect.height
+}
+
+func (rect *Rect) SetHeight(h float64) {
+	rect.width = h
+}
+
 // GetOutlineWidth reports the current outline width.
 // Use SetOutlineWidth to change it.
 func (rect *Rect) GetOutlineWidth() float64 {
