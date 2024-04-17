@@ -105,33 +105,64 @@ func (s *Sprite) BoundsRect() gmath.Rect {
 	}
 }
 
-// ImageSize returns the bound image width and height.
-func (s *Sprite) ImageSize() (w, h int) {
+// ImageWidth returns the bound image width.
+// The image size (width/height) can't be changed,
+// unless a new image is assigned to the sprite.
+func (s *Sprite) ImageWidth() int {
 	bounds := s.image.Bounds()
-	return bounds.Dx(), bounds.Dy()
+	return bounds.Dx()
 }
 
-// GetFrameSize returns the current frame width and height.
-// Use SetFrameSize to change it.
-func (s *Sprite) GetFrameSize() (w, h int) {
-	return int(s.frameWidth), int(s.frameHeight)
+// ImageHeight returns the bound image height.
+// The image size (width/height) can't be changed,
+// unless a new image is assigned to the sprite.
+func (s *Sprite) ImageHeight() int {
+	bounds := s.image.Bounds()
+	return bounds.Dy()
 }
 
-// SetFrameSize assigns new frame width and height.
-// Use GetFrameSize to retrieve the current size.
+// GetFrameWidth returns the current frame width.
+// Use SetFrameWidth to change it.
+func (s *Sprite) GetFrameWidth() int {
+	return int(s.frameWidth)
+}
+
+// GetFrameHeight returns the current frame height.
+// Use SetFrameHeight to change it.
+func (s *Sprite) GetFrameHeight() int {
+	return int(s.frameHeight)
+}
+
+// SetFrameWidth assigns new frame width.
+// Use GetFrameWidth to retrieve the current value.
 //
 // The frame sizes are useful when working with an underlying image
 // that contains several logical images ("frames").
 // A frame size defines an image rectangle sizes to be used.
 // A frame offset defines the rectangle Min value.
-func (s *Sprite) SetFrameSize(w, h int) {
+func (s *Sprite) SetFrameSize(w int) {
 	uw := uint16(w)
-	uh := uint16(h)
-	if s.frameWidth == uw && s.frameHeight == uh {
+	if s.frameWidth == uw {
 		return
 	}
 
 	s.frameWidth = uw
+	s.flags |= spriteFlagSubImageChanged
+}
+
+// SetFrameHeight assigns new frame height.
+// Use GetFrameHeight to retrieve the current value.
+//
+// The frame sizes are useful when working with an underlying image
+// that contains several logical images ("frames").
+// A frame size defines an image rectangle sizes to be used.
+// A frame offset defines the rectangle Min value.
+func (s *Sprite) SetFrameHeight(h int) {
+	uh := uint16(h)
+	if s.frameHeight == uh {
+		return
+	}
+
 	s.frameHeight = uh
 	s.flags |= spriteFlagSubImageChanged
 }
@@ -219,27 +250,48 @@ func (s *Sprite) IsVerticallyFlipped() bool { return s.getFlag(spriteFlagFlipVer
 // Use IsVerticallyFlipped to get the current flag value.
 func (s *Sprite) SetVecricalFlip(vflip bool) { s.setFlag(spriteFlagFlipVertical, vflip) }
 
-// GetFrameOffset returns the currently configured frame offsets.
-// Use SetFrameOffset to change these values.
-func (s *Sprite) GetFrameOffset() (x, y int) {
-	return int(s.frameOffsetX), int(s.frameOffsetY)
+// GetFrameOffsetX returns the currently configured frame offset X.
+// Use SetFrameOffsetX to change it.
+func (s *Sprite) GetFrameOffsetX() int {
+	return int(s.frameOffsetX)
 }
 
-// SetFrameOffset assigns new frame offsets.
-// Use GetFrameOffset to retrieve the current offset values.
+// GetFrameOffsetY returns the currently configured frame offset Y.
+// Use SetFrameOffsetY to change it.
+func (s *Sprite) GetFrameOffsetY() int {
+	return int(s.frameOffsetY)
+}
+
+// SetFrameOffsetX assigns new frame X offset.
+// Use GetFrameOffsetX to retrieve the current offset values.
 //
 // The frame offsets are useful when working with an underlying image
 // that contains several logical images ("frames").
 // A frame offset defines the rectangle Min value.
 // A frame size defines an image rectangle sizes to be used.
-func (s *Sprite) SetFrameOffset(x, y int) {
+func (s *Sprite) SetFrameOffsetX(x int) {
 	ux := uint16(x)
-	uy := uint16(y)
-	if s.frameOffsetX == ux && s.frameOffsetY == uy {
+	if s.frameOffsetX == ux {
 		return
 	}
 
 	s.frameOffsetX = ux
+	s.flags |= spriteFlagSubImageChanged
+}
+
+// SetFrameOffsetY assigns new frame Y offset.
+// Use GetFrameOffsetY to retrieve the current offset values.
+//
+// The frame offsets are useful when working with an underlying image
+// that contains several logical images ("frames").
+// A frame offset defines the rectangle Min value.
+// A frame size defines an image rectangle sizes to be used.
+func (s *Sprite) SetFrameOffsetY(y int) {
+	uy := uint16(y)
+	if s.frameOffsetY == uy {
+		return
+	}
+
 	s.frameOffsetY = uy
 	s.flags |= spriteFlagSubImageChanged
 }
