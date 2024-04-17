@@ -140,7 +140,7 @@ func (s *Sprite) GetFrameHeight() int {
 // that contains several logical images ("frames").
 // A frame size defines an image rectangle sizes to be used.
 // A frame offset defines the rectangle Min value.
-func (s *Sprite) SetFrameSize(w int) {
+func (s *Sprite) SetFrameWidth(w int) {
 	uw := uint16(w)
 	if s.frameWidth == uw {
 		return
