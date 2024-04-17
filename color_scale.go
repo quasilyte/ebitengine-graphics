@@ -31,7 +31,7 @@ var (
 // Note: alpha value is fixed to 0xFF, if you need some other value,
 // use RGBA() function instead.
 //
-// Hint: use RGB(v).Color() to get a color.RGBA object.
+// Hint: use RGB(v).Color() to get a color.NRGBA object.
 func RGB(rgb uint64) ColorScale {
 	r := uint8((rgb & (0xFF << (8 * 2))) >> (8 * 2))
 	g := uint8((rgb & (0xFF << (8 * 1))) >> (8 * 1))
@@ -42,7 +42,7 @@ func RGB(rgb uint64) ColorScale {
 // RGBA returns a ColorScale created from the bits of rgba value.
 // RGBA(0xAABBCCEE) is identical to R=0xAA, G=0xBB, B=0xCC, A=0xEE.
 //
-// Hint: use RGBA(v).Color() to get a color.RGBA object.
+// Hint: use RGBA(v).Color() to get a color.NRGBA object.
 func RGBA(rgb uint64) ColorScale {
 	r := uint8((rgb & (0xFF << (8 * 3))) >> (8 * 3))
 	g := uint8((rgb & (0xFF << (8 * 2))) >> (8 * 2))
@@ -59,14 +59,14 @@ func ColorScaleFromRGBA(r, g, b, a uint8) ColorScale {
 }
 
 // ColorScaleFromRGBA constructs a ColorScale using ColorScale.SetColor method.
-func ColorScaleFromColor(c color.RGBA) ColorScale {
+func ColorScaleFromColor(c color.NRGBA) ColorScale {
 	var cs ColorScale
 	cs.SetColor(c)
 	return cs
 }
 
-// SetColor assigns the color.RGBA equivalent to a color scale.
-func (c *ColorScale) SetColor(rgba color.RGBA) {
+// SetColor assigns the color.NRGBA equivalent to a color scale.
+func (c *ColorScale) SetColor(rgba color.NRGBA) {
 	c.SetRGBA(rgba.R, rgba.G, rgba.B, rgba.A)
 }
 
@@ -78,16 +78,16 @@ func (c *ColorScale) SetRGBA(r, g, b, a uint8) {
 	c.A = float32(a) / 255
 }
 
-// Color returns the color.RGBA representation of a color scale.
+// Color returns the color.NRGBA representation of a color scale.
 //
 // It will only work correctly for color scales those values are in [0, 1] range.
 // If some color value overflows (or underflows) this range, the result
 // of this operation is truncated garbage.
 //
 // This function is mostly useful in combination with RGB() function
-// to construct a color.RGBA easily: RGB(0xAABBCCEE).Color().
-func (c *ColorScale) Color() color.RGBA {
-	return color.RGBA{
+// to construct a color.NRGBA easily: RGB(0xAABBCCEE).Color().
+func (c *ColorScale) Color() color.NRGBA {
+	return color.NRGBA{
 		R: uint8(c.R * 255),
 		G: uint8(c.G * 255),
 		B: uint8(c.B * 255),
