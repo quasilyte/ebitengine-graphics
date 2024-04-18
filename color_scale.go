@@ -7,6 +7,7 @@ import (
 )
 
 // ColorScale is like ebiten.ColorScale, but its values don't need to be premultiplied.
+// In a sense, it's like color.NRGBA in comparison with color.RGBA.
 //
 // For a normal color, we use {1, 1, 1, 1}, for a transparent color it's {0, 0, 0, 0}.
 // To double the amount of red, you can use {2, 1, 1, 1} or {1, 0.5, 0.5, 1}.
@@ -95,7 +96,17 @@ func (c *ColorScale) Color() color.NRGBA {
 	}
 }
 
+// ScaleRGB multiplies R, G and B color scale components by x.
+// It doesn't affect the alpha channel.
+func (c *ColorScale) ScaleRGB(x float32) {
+	c.R *= x
+	c.G *= x
+	c.B *= x
+}
+
 func (c *ColorScale) toEbitenColorScale() ebiten.ColorScale {
+	// This basically turns a NRGBA-style color scale into
+	// RGBA-style color scale (alpha-premultiplied).
 	var ec ebiten.ColorScale
 	ec.SetR(c.R * c.A)
 	ec.SetG(c.G * c.A)
