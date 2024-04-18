@@ -51,6 +51,11 @@ func (s *Shader) Clone() *Shader {
 	return &cloned
 }
 
+// GetValue returns the current uniform value stored under the key.
+func (s *Shader) GetValue(key string) any {
+	return s.shaderData[key]
+}
+
 // SetVec2Value assigns vec2 Kage uniform variable.
 // v must be a 2-element slice, otherwise this method will panic.
 func (s *Shader) SetVec2Value(key string, v []float32) {
