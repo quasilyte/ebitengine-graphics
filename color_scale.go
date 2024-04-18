@@ -98,10 +98,18 @@ func (c *ColorScale) Color() color.NRGBA {
 
 // ScaleRGB multiplies R, G and B color scale components by x.
 // It doesn't affect the alpha channel.
-func (c *ColorScale) ScaleRGB(x float32) {
-	c.R *= x
-	c.G *= x
-	c.B *= x
+func (c ColorScale) ScaleRGB(x float32) ColorScale {
+	c2 := c
+	c2.R *= x
+	c2.G *= x
+	c2.B *= x
+	return c2
+}
+
+// RotateHue returns a color scale with its hue rotated.
+// The argument specifies the number of degrees to rotate.
+func (c ColorScale) RotateHue(deg float32) ColorScale {
+	return hueRotate(c, deg)
 }
 
 func (c *ColorScale) toEbitenColorScale() ebiten.ColorScale {
