@@ -312,6 +312,11 @@ func (s *Sprite) SetImage(img *ebiten.Image) {
 	s.flags |= spriteFlagSubImageChanged
 }
 
+// GetImage returns the sprite's current texture image.
+func (s *Sprite) GetImage() *ebiten.Image {
+	return s.image
+}
+
 // Draw renders the associated image onto the provided dst image.
 //
 // This method is a shorthand to DrawWithOffset(dst, {})
