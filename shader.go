@@ -38,6 +38,19 @@ func NewShader(compiled *ebiten.Shader) *Shader {
 	}
 }
 
+// Clone returns a cloned shader object.
+// It's main purpose is to create a new shader handle
+// that has the identical uniform values those
+// can be modified independently.
+func (s *Shader) Clone() *Shader {
+	cloned := *s
+	cloned.shaderData = make(map[string]any, len(s.shaderData))
+	for k, v := range s.shaderData {
+		cloned.shaderData[k] = v
+	}
+	return &cloned
+}
+
 // SetVec2Value assigns vec2 Kage uniform variable.
 // v must be a 2-element slice, otherwise this method will panic.
 func (s *Shader) SetVec2Value(key string, v []float32) {
