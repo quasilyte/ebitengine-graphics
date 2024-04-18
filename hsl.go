@@ -11,14 +11,14 @@ func hueRotate(rgb ColorScale, deg float32) ColorScale {
 }
 
 func rgb2hsl(rgb ColorScale) (h, s, l float32) {
-	r := float32(rgb.R)
-	g := float32(rgb.G)
-	b := float32(rgb.B)
+	r := rgb.R
+	g := rgb.G
+	b := rgb.B
 
 	clrMax := max(max(r, g), b)
 	clrMin := min(min(r, g), b)
 
-	l = float32((clrMax + clrMin) / 2)
+	l = (clrMax + clrMin) / 2
 
 	delta := clrMax - clrMin
 	if delta == 0 {
@@ -45,9 +45,9 @@ func rgb2hsl(rgb ColorScale) (h, s, l float32) {
 
 	switch {
 	case h < 0:
-		h += 1
+		h++
 	case h > 1:
-		h -= 1
+		h--
 	}
 
 	return h, s, l
@@ -76,10 +76,10 @@ func hsl2rgb(h, s, l, a float32) ColorScale {
 
 func hueToRGB(v1, v2, h float32) float32 {
 	if h < 0 {
-		h += 1
+		h++
 	}
 	if h > 1 {
-		h -= 1
+		h--
 	}
 	switch {
 	case 6*h < 1:
