@@ -241,14 +241,14 @@ func (s *Sprite) IsHorizontallyFlipped() bool { return s.getFlag(spriteFlagFlipH
 func (s *Sprite) SetHorizontalFlip(hflip bool) { s.setFlag(spriteFlagFlipHorizontal, hflip) }
 
 // IsVerticallyFlipped reports whether VerticalFlip flag is set.
-// Use SetVecricalFlip to change this flag value.
+// Use SetVerticalFlip to change this flag value.
 //
 // When sprite is vertically flipped, it's image will be mirrored vertically.
 func (s *Sprite) IsVerticallyFlipped() bool { return s.getFlag(spriteFlagFlipVertical) }
 
-// SetVecricalFlip changes the VerticalFlip flag value.
+// SetVerticalFlip changes the VerticalFlip flag value.
 // Use IsVerticallyFlipped to get the current flag value.
-func (s *Sprite) SetVecricalFlip(vflip bool) { s.setFlag(spriteFlagFlipVertical, vflip) }
+func (s *Sprite) SetVerticalFlip(vflip bool) { s.setFlag(spriteFlagFlipVertical, vflip) }
 
 // GetFrameOffsetX returns the currently configured frame offset X.
 // Use SetFrameOffsetX to change it.
