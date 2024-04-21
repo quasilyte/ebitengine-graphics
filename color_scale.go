@@ -87,7 +87,7 @@ func (c *ColorScale) SetRGBA(r, g, b, a uint8) {
 //
 // This function is mostly useful in combination with RGB() function
 // to construct a color.NRGBA easily: RGB(0xAABBCCEE).Color().
-func (c *ColorScale) Color() color.NRGBA {
+func (c ColorScale) Color() color.NRGBA {
 	return color.NRGBA{
 		R: uint8(c.R * 255),
 		G: uint8(c.G * 255),
