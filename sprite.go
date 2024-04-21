@@ -167,6 +167,26 @@ func (s *Sprite) SetFrameHeight(h int) {
 	s.flags |= spriteFlagSubImageChanged
 }
 
+// GetScaleX returns the sprite horizontal (X-axis) scaling factor.
+// Use SetScaleX to change it.
+func (s *Sprite) GetScaleX() float64 { return s.scaleX }
+
+// GetScaleY returns the sprite vertical (Y-axis) scaling factor.
+// Use SetScaleY to change it.
+func (s *Sprite) GetScaleY() float64 { return s.scaleY }
+
+// SetScaleX assigns new sprite horizontal (X-axis) scaling factor.
+// Use GetScaleX to retrieve the current value.
+func (s *Sprite) SetScaleX(scale float64) {
+	s.scaleX = scale
+}
+
+// SetScaleY assigns new sprite vertical (Y-axis) scaling factor.
+// Use GetScaleY to retrieve the current value.
+func (s *Sprite) SetScaleY(scale float64) {
+	s.scaleY = scale
+}
+
 // GetColorScale is used to retrieve the current color scale value of the sprite.
 // Use SetColorScale to change it.
 func (s *Sprite) GetColorScale() ColorScale {
