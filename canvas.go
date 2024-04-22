@@ -55,12 +55,6 @@ func (c *Canvas) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	}
 
 	c.spr.GetImage().Clear()
-
-	opts.Offset = opts.Offset.Add(c.Pos.Resolve())
-	if c.Rotation != nil {
-		opts.Rotation += *c.Rotation
-	}
-	c.container.DrawWithOptions(c.spr.GetImage(), opts)
-
-	c.spr.Draw(dst)
+	c.container.Draw(c.spr.GetImage())
+	c.spr.DrawWithOptions(dst, opts)
 }
