@@ -96,6 +96,14 @@ func (c ColorScale) Color() color.NRGBA {
 	}
 }
 
+// ScaleAlpha returns the color scale with alpha multiplied by x.
+// It doesn't affect R/G/B channels.
+func (c ColorScale) ScaleAlpha(x float32) ColorScale {
+	c2 := c
+	c2.A *= x
+	return c2
+}
+
 // ScaleRGB multiplies R, G and B color scale components by x.
 // It doesn't affect the alpha channel.
 func (c ColorScale) ScaleRGB(x float32) ColorScale {
