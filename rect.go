@@ -169,17 +169,17 @@ func (rect *Rect) SetOutlineColorScale(cs ColorScale) {
 
 // Draw renders the rect onto the provided dst image.
 //
-// This method is a shorthand to DrawWithOffset(dst, {})
+// This method is a shorthand to DrawWithOptions(dst, {})
 // which also implements the gscene.Graphics interface.
 //
 // See DrawWithOptions for more info.
 func (rect *Rect) Draw(dst *ebiten.Image) {
-	rect.DrawWithOffset(dst, gmath.Vec{})
+	rect.DrawWithOptions(dst, DrawOptions{})
 }
 
-// DrawWithOffset renders the rect onto the provided dst image
+// DrawWithOptions renders the rect onto the provided dst image
 // while also using the extra provided offset.
-func (rect *Rect) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
+func (rect *Rect) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	if !rect.visible {
 		return
 	}
@@ -192,7 +192,7 @@ func (rect *Rect) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
 	// TODO: implement the scaling.
 	// TODO: maybe add a special case for opaque rectangles.
 
-	finalOffset := rect.calculateFinalOffset(offset)
+	finalOffset := rect.calculateFinalOffset(opts.Offset)
 
 	if rect.outlineColorScale.A == 0 || rect.outlineWidth < 1 {
 		// Fill-only mode.

@@ -339,7 +339,7 @@ func (s *Sprite) GetImage() *ebiten.Image {
 
 // Draw renders the associated image onto the provided dst image.
 //
-// This method is a shorthand to DrawWithOffset(dst, {})
+// This method is a shorthand to DrawWithOptions(dst, {})
 // which also implements the gscene.Graphics interface.
 //
 // See DrawWithOptions for more info.
@@ -347,7 +347,7 @@ func (s *Sprite) Draw(dst *ebiten.Image) {
 	s.DrawWithOptions(dst, DrawOptions{})
 }
 
-// DrawWithOffset renders the associated image onto the provided dst image
+// DrawWithOptions renders the associated image onto the provided dst image
 // while also using the extra provided offset.
 func (s *Sprite) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	// Calculations that are expensive to re-calculate on every Draw call

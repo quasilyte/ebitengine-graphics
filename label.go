@@ -206,15 +206,16 @@ func (l *Label) BoundsRect() gmath.Rect {
 }
 
 func (l *Label) Draw(dst *ebiten.Image) {
-	l.DrawWithOffset(dst, gmath.Vec{})
+	l.DrawWithOptions(dst, DrawOptions{})
 }
 
-func (l *Label) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
+func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	if !l.IsVisible() || l.text == "" {
 		return
 	}
 
 	pos := l.Pos.Resolve()
+	offset := opts.Offset
 
 	fontInfo := l.cache.fontInfoList[l.fontID]
 

@@ -131,19 +131,19 @@ func (l *Line) SetAlpha(a float32) {
 
 // Draw renders the line onto the provided dst image.
 //
-// This method is a shorthand to DrawWithOffset(dst, {})
+// This method is a shorthand to DrawWithOptions(dst, {})
 // which also implements the gscene.Graphics interface.
 //
 // See DrawWithOptions for more info.
 func (l *Line) Draw(dst *ebiten.Image) {
-	l.DrawWithOffset(dst, gmath.Vec{})
+	l.DrawWithOptions(dst, DrawOptions{})
 }
 
-// DrawWithOffset renders the line onto the provided dst image
-// while also using the extra provided offset.
+// DrawWithOptions renders the line onto the provided dst image
+// while also using the extra provided offset and other options.
 //
 // The offset is applied to both begin and end positions.
-func (l *Line) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
+func (l *Line) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	if !l.visible {
 		return
 	}
@@ -151,7 +151,7 @@ func (l *Line) DrawWithOffset(dst *ebiten.Image, offset gmath.Vec) {
 		return
 	}
 
-	pos1 := l.BeginPos.Resolve().Add(offset)
-	pos2 := l.EndPos.Resolve().Add(offset)
+	pos1 := l.BeginPos.Resolve().Add(opts.Offset)
+	pos2 := l.EndPos.Resolve().Add(opts.Offset)
 	drawLine(dst, pos1, pos2, l.width, l.ebitenColorScale)
 }
