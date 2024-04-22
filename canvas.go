@@ -15,10 +15,12 @@ type Canvas struct {
 }
 
 func NewCanvas(cache *Cache) *Canvas {
-	return &Canvas{
+	c := &Canvas{
 		spr:       NewSprite(cache),
 		container: NewContainer(),
 	}
+	c.spr.SetCentered(false)
+	return c
 }
 
 func (c *Canvas) SetDstImage(img *ebiten.Image) {
