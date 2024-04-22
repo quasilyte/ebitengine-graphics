@@ -12,6 +12,8 @@ type Canvas struct {
 
 	spr       *Sprite
 	container *Container
+
+	offscreen bool
 }
 
 func NewCanvas(cache *Cache) *Canvas {
@@ -43,6 +45,14 @@ func (c *Canvas) SetVisibility(visible bool) {
 	c.container.SetVisibility(visible)
 }
 
+func (c *Canvas) IsOffscreen() bool {
+	return c.offscreen
+}
+
+func (c *Canvas) SetOffscreen(offscreen bool) {
+	c.offscreen = offscreen
+}
+
 func (c *Canvas) Draw(dst *ebiten.Image) {
 	c.DrawWithOptions(dst, DrawOptions{})
 }
@@ -59,9 +69,11 @@ func (c *Canvas) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	c.spr.GetImage().Clear()
 	c.container.Draw(c.spr.GetImage())
 
-	opts.Offset = opts.Offset.Add(c.Pos.Resolve())
-	if c.Rotation != nil {
-		opts.Rotation += *c.Rotation
+	if !c.offscreen {
+		opts.Offset = opts.Offset.Add(c.Pos.Resolve())
+		if c.Rotation != nil {
+			opts.Rotation += *c.Rotation
+		}
+		c.spr.DrawWithOptions(dst, opts)
 	}
-	c.spr.DrawWithOptions(dst, opts)
 }
