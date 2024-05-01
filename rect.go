@@ -128,7 +128,7 @@ func (rect *Rect) GetHeight() float64 {
 }
 
 func (rect *Rect) SetHeight(h float64) {
-	rect.width = h
+	rect.height = h
 }
 
 // GetOutlineWidth reports the current outline width.
