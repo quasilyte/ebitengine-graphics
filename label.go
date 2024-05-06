@@ -398,5 +398,8 @@ func (l *Label) estimateHeight(numLines int) float64 {
 	if numLines >= 2 {
 		estimatedHeight += (float64(numLines) - 1) * fontInfo.lineHeight
 	}
+	if l.shadow.enabled {
+		estimatedHeight += 1
+	}
 	return estimatedHeight
 }
