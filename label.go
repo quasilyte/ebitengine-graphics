@@ -58,7 +58,8 @@ type Label struct {
 
 	Pos gmath.Pos
 
-	cache *Cache
+	cache  *Cache
+	shadow *labelShadowData
 
 	flags        labelFlag
 	fontID       uint16
@@ -66,6 +67,15 @@ type Label struct {
 	height       uint16
 	boundsWidth  uint16
 	boundsHeight uint16
+}
+
+type labelShadowData struct {
+	enabled          bool
+	ebitenColorScale ebiten.ColorScale
+}
+
+var disabledShadow = &labelShadowData{
+	enabled: false,
 }
 
 type labelFlag uint16
@@ -95,7 +105,26 @@ func NewLabel(cache *Cache, ff font.Face) *Label {
 		cache:  cache,
 		fontID: fontID,
 		flags:  labelFlagVisible,
+		shadow: disabledShadow,
 	}
+}
+
+// SetShadow enables rendered text shadows.
+//
+// The shadow support is experimental and is inefficient.
+// Right now only a 1 pixel-tall, straight vertical shadow is supported.
+//
+// Experimental: the API will change in the future.
+func (l *Label) SetShadow(cs ColorScale) {
+	if cs.A == 0 {
+		l.shadow = disabledShadow
+		return
+	}
+
+	if l.shadow == disabledShadow {
+		l.shadow = &labelShadowData{enabled: true}
+	}
+	l.shadow.ebitenColorScale = cs.toEbitenColorScale()
 }
 
 // GetColorScale is used to retrieve the current color scale value of the label's text.
@@ -199,6 +228,10 @@ func (l *Label) SetText(s string) {
 	bounds := text.BoundString(fontInfo.ff, l.text) //nolint (font.BoundString is different)
 	l.boundsWidth = uint16(bounds.Dx())
 	l.boundsHeight = uint16(bounds.Dy())
+
+	if l.shadow.enabled {
+		l.boundsHeight += 1
+	}
 }
 
 func (l *Label) BoundsRect() gmath.Rect {
@@ -235,8 +268,18 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 		pos.Y += containerRect.Height() - l.estimateHeight(numLines)
 	}
 
+	if l.shadow.enabled {
+		l.drawText(dst, containerRect, pos, offset.Add(gmath.Vec{Y: 1}), l.shadow.ebitenColorScale)
+	}
+	l.drawText(dst, containerRect, pos, offset, l.ebitenColorScale)
+}
+
+func (l *Label) drawText(dst *ebiten.Image, rect gmath.Rect, pos, offset gmath.Vec, clr ebiten.ColorScale) {
+	fontInfo := l.cache.fontInfoList[l.fontID]
+	containerRect := rect
+
 	var drawOptions ebiten.DrawImageOptions
-	drawOptions.ColorScale = l.ebitenColorScale
+	drawOptions.ColorScale = clr
 	drawOptions.Filter = ebiten.FilterLinear
 
 	if l.GetAlignHorizontal() == AlignHorizontalLeft {
