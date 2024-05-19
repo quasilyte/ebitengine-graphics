@@ -120,6 +120,10 @@ func (c ColorScale) RotateHue(deg float32) ColorScale {
 	return hueRotate(c, deg)
 }
 
+func (c ColorScale) ToHSL() (h, s, l float32) {
+	return rgb2hsl(c)
+}
+
 func (c *ColorScale) toEbitenColorScale() ebiten.ColorScale {
 	// This basically turns a NRGBA-style color scale into
 	// RGBA-style color scale (alpha-premultiplied).
