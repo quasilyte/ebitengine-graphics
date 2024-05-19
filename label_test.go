@@ -12,7 +12,7 @@ func TestLabelSize(t *testing.T) {
 		t.Skip("this test is only executed on 64-bit platforms")
 	}
 
-	wantSize := uintptr(96)
+	wantSize := uintptr(104)
 	haveSize := unsafe.Sizeof(graphics.Label{})
 	if wantSize != haveSize {
 		t.Fatalf("sizeof(Label):\nhave: %d\nwant: %d", haveSize, wantSize)
