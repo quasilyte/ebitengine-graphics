@@ -27,10 +27,7 @@ type Line struct {
 // * Visible=true
 // * The ColorScale is {1, 1, 1, 1}
 // * Width is 1
-func NewLine(_ *Cache, begin, end gmath.Pos) *Line {
-	// Cache is not used yet, but it's our way to keep the API stable
-	// while keeping the optimization opportunities.
-	// It's also consistent with other constructor functions.
+func NewLine(begin, end gmath.Pos) *Line {
 	return &Line{
 		BeginPos:         begin,
 		EndPos:           end,

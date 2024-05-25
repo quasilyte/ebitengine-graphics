@@ -47,10 +47,7 @@ type Rect struct {
 // * The FillColorScale is {1, 1, 1, 1}
 // * The OutlineColorScale is {0, 0, 0, 0} (invisible)
 // * OutlineWidth is 1 (but the default outline color is invisible)
-func NewRect(_ *Cache, width, height float64) *Rect {
-	// Cache is not used yet, but it's our way to keep the API stable
-	// while keeping the optimization opportunities.
-	// It's also consistent with other constructor functions.
+func NewRect(width, height float64) *Rect {
 	return &Rect{
 		visible:           true,
 		centered:          true,

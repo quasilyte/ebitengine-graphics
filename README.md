@@ -48,7 +48,6 @@ func main() {
 
 type exampleGame struct {
 	pos           gmath.Vec
-	graphicsCache *graphics.Cache
 	initialized   bool
 	objects       []drawable
 }
@@ -60,7 +59,6 @@ type drawable interface {
 func newExampleGame() *exampleGame {
 	return &exampleGame{
 		pos:           gmath.Vec{X: 32, Y: 32},
-		graphicsCache: graphics.NewCache(),
 	}
 }
 
@@ -88,14 +86,14 @@ func (g *exampleGame) Init() {
 	{
 		from := gmath.Pos{Base: &g.pos}
 		to := gmath.Pos{Offset: gmath.Vec{X: 128, Y: 64}}
-		l := graphics.NewLine(g.graphicsCache, from, to)
+		l := graphics.NewLine(from, to)
 		l.SetWidth(2)
 		l.SetColorScale(graphics.ColorScaleFromRGBA(200, 100, 100, 255))
 		g.objects = append(g.objects, l)
 	}
 
 	{
-		r := graphics.NewRect(g.graphicsCache, 32, 32)
+		r := graphics.NewRect(32, 32)
 		r.Pos.Base = &g.pos
 		r.SetFillColorScale(graphics.RGB(0xAABB00))
 		r.SetOutlineColorScale(graphics.RGB(0x0055ff))
@@ -112,14 +110,14 @@ func (c *exampleController) Init(scene *gscene.SimpleRootScene) {
 	{
 		from := gmath.Pos{Base: &g.pos}
 		to := gmath.Pos{Offset: gmath.Vec{X: 128, Y: 64}}
-		l := graphics.NewLine(g.graphicsCache, from, to)
+		l := graphics.NewLine(from, to)
 		l.SetWidth(2)
 		l.SetColorScale(graphics.ColorScaleFromRGBA(200, 100, 100, 255))
 		scene.AddGraphics(l)
 	}
 
 	{
-		r := graphics.NewRect(g.graphicsCache, 32, 32)
+		r := graphics.NewRect(32, 32)
 		r.Pos.Base = &g.pos
 		r.SetFillColorScale(graphics.RGB(0xAABB00))
 		r.SetOutlineColorScale(graphics.RGB(0x0055ff))
@@ -130,23 +128,3 @@ func (c *exampleController) Init(scene *gscene.SimpleRootScene) {
 ```
 
 Note that we can add the graphical object directly to the scene. The scene will manage their `Draw` calls as well as their lifetimes (based on graphical objects being disposed or not).
-
-## Suggestions
-
-### Make Cache Usage Transparent
-
-Your application only needs one instance of `*graphics.Cache`. It can be stored inside some app-wide context object.
-
-Add constructor methods to that context object to hide the cache argument from the callers:
-
-```go
-func (ctx *AppContext) NewSprite() *graphics.Sprite {
-	return graphics.NewSprite(ctx.graphicsCache)
-}
-
-func (ctx *AppContext) NewRect(w, h float64) *graphics.Rect {
-	return graphics.NewRect(ctx.graphicsCache, w, h)
-}
-
-// ... and so on (depending on which graphical objects you need)
-```

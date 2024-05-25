@@ -58,7 +58,6 @@ type Label struct {
 
 	Pos gmath.Pos
 
-	cache  *Cache
 	shadow *labelShadowData
 
 	flags        labelFlag
@@ -99,10 +98,9 @@ const (
 	labelFlagDisposed
 )
 
-func NewLabel(cache *Cache, ff font.Face) *Label {
-	fontID := cache.internFontFace(ff)
+func NewLabel(ff font.Face) *Label {
+	fontID := globalCache.internFontFace(ff)
 	return &Label{
-		cache:  cache,
 		fontID: fontID,
 		flags:  labelFlagVisible,
 		shadow: disabledShadow,
@@ -223,7 +221,7 @@ func (l *Label) SetVisibility(visible bool) {
 func (l *Label) SetText(s string) {
 	l.text = s
 
-	fontInfo := l.cache.fontInfoList[l.fontID]
+	fontInfo := globalCache.fontInfoList[l.fontID]
 
 	bounds := text.BoundString(fontInfo.ff, l.text) //nolint (font.BoundString is different)
 	l.boundsWidth = uint16(bounds.Dx())
@@ -250,7 +248,7 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	pos := l.Pos.Resolve()
 	offset := opts.Offset
 
-	fontInfo := l.cache.fontInfoList[l.fontID]
+	fontInfo := globalCache.fontInfoList[l.fontID]
 
 	// Adjust the pos, since "dot position" (baseline) is not a top-left corner.
 	pos.Y += fontInfo.capHeight
@@ -275,7 +273,7 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 }
 
 func (l *Label) drawText(dst *ebiten.Image, rect gmath.Rect, pos, offset gmath.Vec, clr ebiten.ColorScale) {
-	fontInfo := l.cache.fontInfoList[l.fontID]
+	fontInfo := globalCache.fontInfoList[l.fontID]
 	containerRect := rect
 
 	var drawOptions ebiten.DrawImageOptions
@@ -393,7 +391,7 @@ func (l *Label) containerRect(pos gmath.Vec) gmath.Rect {
 }
 
 func (l *Label) estimateHeight(numLines int) float64 {
-	fontInfo := l.cache.fontInfoList[l.fontID]
+	fontInfo := globalCache.fontInfoList[l.fontID]
 	estimatedHeight := fontInfo.capHeight
 	if numLines >= 2 {
 		estimatedHeight += (float64(numLines) - 1) * fontInfo.lineHeight

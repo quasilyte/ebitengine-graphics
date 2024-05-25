@@ -6,11 +6,11 @@ import (
 	"golang.org/x/image/font"
 )
 
-// Cache is a storage that is shared between all
+var globalCache = &cache{}
+
+// cache is a storage that is shared between all
 // graphical elements.
-//
-// Usually, there should be only 1 graphical cache per app.
-type Cache struct {
+type cache struct {
 	fontInfoList []fontInfo
 	fontInfoMap  map[font.Face]uint16
 }
@@ -21,11 +21,7 @@ type fontInfo struct {
 	lineHeight float64
 }
 
-func NewCache() *Cache {
-	return &Cache{}
-}
-
-func (c *Cache) internFontFace(ff font.Face) uint16 {
+func (c *cache) internFontFace(ff font.Face) uint16 {
 	if c.fontInfoMap == nil {
 		c.fontInfoMap = make(map[font.Face]uint16, 8)
 	}

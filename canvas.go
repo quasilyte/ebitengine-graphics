@@ -16,9 +16,9 @@ type Canvas struct {
 	offscreen bool
 }
 
-func NewCanvas(cache *Cache) *Canvas {
+func NewCanvas() *Canvas {
 	c := &Canvas{
-		spr:       NewSprite(cache),
+		spr:       NewSprite(),
 		container: NewContainer(),
 	}
 	c.spr.SetCentered(false)

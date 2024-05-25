@@ -42,8 +42,6 @@ type Sprite struct {
 	// If nil, no shaders will be used.
 	Shader *Shader
 
-	cache *Cache
-
 	frameOffsetX uint16
 	frameOffsetY uint16
 
@@ -72,9 +70,8 @@ const (
 // * Visible=true
 // * ScaleX and ScaleY are 1
 // * The ColorScale is {1, 1, 1, 1}
-func NewSprite(cache *Cache) *Sprite {
+func NewSprite() *Sprite {
 	return &Sprite{
-		cache:            cache,
 		colorScale:       defaultColorScale,
 		ebitenColorScale: defaultColorScale.toEbitenColorScale(),
 		scaleX:           1,
