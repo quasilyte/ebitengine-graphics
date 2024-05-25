@@ -228,7 +228,7 @@ func (l *Label) SetText(s string) {
 	l.boundsHeight = uint16(bounds.Dy())
 
 	if l.shadow.enabled {
-		l.boundsHeight += 1
+		l.boundsHeight++
 	}
 }
 
@@ -397,7 +397,7 @@ func (l *Label) estimateHeight(numLines int) float64 {
 		estimatedHeight += (float64(numLines) - 1) * fontInfo.lineHeight
 	}
 	if l.shadow.enabled {
-		estimatedHeight += 1
+		estimatedHeight++
 	}
 	return estimatedHeight
 }
