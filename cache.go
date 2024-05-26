@@ -3,6 +3,7 @@ package graphics
 import (
 	"math"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"golang.org/x/image/font"
 )
 
@@ -13,6 +14,10 @@ var globalCache = &cache{}
 type cache struct {
 	fontInfoList []fontInfo
 	fontInfoMap  map[font.Face]uint16
+
+	shadersCompiled           bool
+	circleOutlineShader       *ebiten.Shader
+	dashedCircleOutlineShader *ebiten.Shader
 }
 
 type fontInfo struct {

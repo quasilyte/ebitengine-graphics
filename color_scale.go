@@ -2,6 +2,7 @@ package graphics
 
 import (
 	"image/color"
+	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -122,6 +123,28 @@ func (c ColorScale) RotateHue(deg float32) ColorScale {
 
 func (c ColorScale) ToHSL() (h, s, l float32) {
 	return rgb2hsl(c)
+}
+
+func (c *ColorScale) asVec4() []float32 {
+	return unsafe.Slice(&c.R, 4)
+}
+
+func (c *ColorScale) undoPremultiply() ColorScale {
+	return ColorScale{
+		R: c.R / c.A,
+		G: c.G / c.A,
+		B: c.B / c.A,
+		A: c.A,
+	}
+}
+
+func (c *ColorScale) premultiplyAlpha() ColorScale {
+	return ColorScale{
+		R: c.R * c.A,
+		G: c.G * c.A,
+		B: c.B * c.A,
+		A: c.A,
+	}
 }
 
 func (c *ColorScale) toEbitenColorScale() ebiten.ColorScale {

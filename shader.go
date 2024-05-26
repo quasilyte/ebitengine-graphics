@@ -74,6 +74,15 @@ func (s *Shader) SetVec3Value(key string, v []float32) {
 	s.setFloat32SliceValue(key, v)
 }
 
+// SetVec4Value assigns vec4 Kage uniform variable.
+// v must be a 4-element slice, otherwise this method will panic.
+func (s *Shader) SetVec4Value(key string, v []float32) {
+	if len(v) != 4 {
+		panic("vec4 values require exactly 4 elements")
+	}
+	s.setFloat32SliceValue(key, v)
+}
+
 // SetIntValue assigns int Kage uniform variable.
 // Since Kage uniforms are 32-bits, we use int32 here to avoid overflows.
 func (s *Shader) SetIntValue(key string, v int32) {
