@@ -119,6 +119,14 @@ func (c *Circle) SetOutlineDash(length, gap float64) {
 	c.shaderData["DashGap"] = c.dashGap
 }
 
+func (c *Circle) GetOutlineWidth() float64 {
+	return float64(c.shaderData["OutlineWidth"].(float32))
+}
+
+func (c *Circle) SetOutlineWidth(w float64) {
+	c.shaderData["OutlineWidth"] = float32(w)
+}
+
 func (c *Circle) GetRadius() float64 {
 	return float64(c.radius)
 }
