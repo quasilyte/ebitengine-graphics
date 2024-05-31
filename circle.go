@@ -108,6 +108,15 @@ func (c *Circle) IsVisible() bool { return c.visible }
 // Use IsVisible to get the current flag value.
 func (c *Circle) SetVisibility(visible bool) { c.visible = visible }
 
+func (c *Circle) GetRadius() float64 {
+	return float64(c.radius)
+}
+
+func (c *Circle) SetRadius(r float64) {
+	c.radius = float32(r)
+	c.shaderData["Radius"] = float32(r)
+}
+
 func (c *Circle) GetOutlineDash() (length, gap float64) {
 	return float64(c.dashLength), float64(c.dashGap)
 }
@@ -125,15 +134,6 @@ func (c *Circle) GetOutlineWidth() float64 {
 
 func (c *Circle) SetOutlineWidth(w float64) {
 	c.shaderData["OutlineWidth"] = float32(w)
-}
-
-func (c *Circle) GetRadius() float64 {
-	return float64(c.radius)
-}
-
-func (c *Circle) SetRadius(r float64) {
-	c.radius = float32(r)
-	c.shaderData["Radius"] = float32(r)
 }
 
 // GetOutlineColorScale is used to retrieve the current outline color scale value of the circle.
