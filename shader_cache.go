@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	//go:embed _shaders/circle_outline.go
+	//go:embed _shaders/circle.go
 	shaderCircleOutline []byte
 
-	//go:embed _shaders/dashed_circle_outline.go
+	//go:embed _shaders/dashed_circle.go
 	shaderDashedCircleOutline []byte
 )
 

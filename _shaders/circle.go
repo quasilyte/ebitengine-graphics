@@ -7,6 +7,7 @@ package main
 var Radius float
 var OutlineWidth float
 var OutlineColor vec4
+var FillColor vec4
 
 func Fragment(_ vec4, pos vec2, _ vec4) vec4 {
 	origin := imageSrc0Origin()
@@ -21,5 +22,5 @@ func Fragment(_ vec4, pos vec2, _ vec4) vec4 {
 	if dist >= r-OutlineWidth {
 		return OutlineColor
 	}
-	return vec4(0)
+	return FillColor
 }

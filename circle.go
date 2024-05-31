@@ -12,6 +12,7 @@ type Circle struct {
 	Rotation       *gmath.Rad
 
 	outlineColorScale ColorScale
+	fillColorScale    ColorScale
 
 	dashLength float32
 	dashGap    float32
@@ -29,6 +30,7 @@ type Circle struct {
 // By default, a circle has these properties:
 // * Centered=true
 // * Visible=true
+// * The FillColorScale is {0, 0, 0, 0} (invisible)
 // * The OutlineColorScale is {1, 1, 1, 1}
 // * OutlineWidth is 1
 //
@@ -41,11 +43,13 @@ func NewCircle(r float64) *Circle {
 		visible:           true,
 		radius:            float32(r),
 		outlineColorScale: defaultColorScale,
+		fillColorScale:    transparentColor,
 	}
 
 	c.shaderData = map[string]any{
 		"Radius":       float32(r),
 		"OutlineWidth": float32(1),
+		"FillColor":    c.fillColorScale.asVec4(),
 		"OutlineColor": c.outlineColorScale.asVec4(),
 		"DashLength":   float32(0),
 		"DashGap":      float32(0),
@@ -134,6 +138,18 @@ func (c *Circle) GetOutlineWidth() float64 {
 
 func (c *Circle) SetOutlineWidth(w float64) {
 	c.shaderData["OutlineWidth"] = float32(w)
+}
+
+// GetFillColorScale is used to retrieve the current fill color scale value of the circle.
+// Use SetFillColorScale to change it.
+func (c *Circle) GetFillColorScale() ColorScale {
+	return c.fillColorScale.undoPremultiply()
+}
+
+// SetFillColorScale assigns a new fill ColorScale to this circle.
+// Use GetFillColorScale to retrieve the current color scale.
+func (c *Circle) SetFillColorScale(cs ColorScale) {
+	c.fillColorScale = cs.premultiplyAlpha()
 }
 
 // GetOutlineColorScale is used to retrieve the current outline color scale value of the circle.
