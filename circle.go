@@ -31,6 +31,7 @@ type Circle struct {
 // * Centered=true
 // * Visible=true
 // * The FillColorScale is {0, 0, 0, 0} (invisible)
+// * FillOffset is 0 (no gaps)
 // * The OutlineColorScale is {1, 1, 1, 1}
 // * OutlineWidth is 1
 //
@@ -50,6 +51,7 @@ func NewCircle(r float64) *Circle {
 		"Radius":       float32(r),
 		"OutlineWidth": float32(1),
 		"FillColor":    c.fillColorScale.asVec4(),
+		"FillOffset":   float32(0),
 		"OutlineColor": c.outlineColorScale.asVec4(),
 		"DashLength":   float32(0),
 		"DashGap":      float32(0),
@@ -138,6 +140,14 @@ func (c *Circle) GetOutlineWidth() float64 {
 
 func (c *Circle) SetOutlineWidth(w float64) {
 	c.shaderData["OutlineWidth"] = float32(w)
+}
+
+func (c *Circle) GetFillOffset() float64 {
+	return float64(c.shaderData["FillOffset"].(float32))
+}
+
+func (c *Circle) SetFillOffset(offset float64) {
+	c.shaderData["FillOffset"] = float32(offset)
 }
 
 // GetFillColorScale is used to retrieve the current fill color scale value of the circle.

@@ -11,6 +11,7 @@ var DashLength float
 var DashGap float
 var OutlineColor vec4
 var FillColor vec4
+var FillOffset float
 
 func Fragment(_ vec4, pos vec2, _ vec4) vec4 {
 	origin := imageSrc0Origin()
@@ -19,7 +20,7 @@ func Fragment(_ vec4, pos vec2, _ vec4) vec4 {
 
 	center := vec2(r, r)
 	dist := distance(zpos, center)
-	if dist > r {
+	if dist > r || dist < FillOffset {
 		return vec4(0)
 	}
 
