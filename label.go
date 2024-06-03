@@ -267,16 +267,19 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	}
 
 	if l.shadow.enabled {
-		l.drawText(dst, containerRect, pos, offset.Add(gmath.Vec{Y: 1}), l.shadow.ebitenColorScale)
+		l.drawText(dst, opts.Blend, containerRect, pos, offset.Add(gmath.Vec{Y: 1}), l.shadow.ebitenColorScale)
 	}
-	l.drawText(dst, containerRect, pos, offset, l.ebitenColorScale)
+	l.drawText(dst, opts.Blend, containerRect, pos, offset, l.ebitenColorScale)
 }
 
-func (l *Label) drawText(dst *ebiten.Image, rect gmath.Rect, pos, offset gmath.Vec, clr ebiten.ColorScale) {
+func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect, pos, offset gmath.Vec, clr ebiten.ColorScale) {
 	fontInfo := globalCache.fontInfoList[l.fontID]
 	containerRect := rect
 
 	var drawOptions ebiten.DrawImageOptions
+	if blend != nil {
+		drawOptions.Blend = *blend
+	}
 	drawOptions.ColorScale = clr
 	drawOptions.Filter = ebiten.FilterLinear
 

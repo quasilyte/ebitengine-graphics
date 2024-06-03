@@ -17,7 +17,7 @@ func init() {
 	emptyImage.Fill(color.White)
 }
 
-func drawLine(dst *ebiten.Image, pos1, pos2 gmath.Vec, width float64, cs ebiten.ColorScale) {
+func drawLine(dst *ebiten.Image, blend *ebiten.Blend, pos1, pos2 gmath.Vec, width float64, cs ebiten.ColorScale) {
 	// TODO: compare with vector API.
 
 	x1 := pos1.X
@@ -28,6 +28,9 @@ func drawLine(dst *ebiten.Image, pos1, pos2 gmath.Vec, width float64, cs ebiten.
 	length := math.Hypot(x2-x1, y2-y1)
 
 	var drawOptions ebiten.DrawImageOptions
+	if blend != nil {
+		drawOptions.Blend = *blend
+	}
 	drawOptions.GeoM.Scale(length, width)
 	drawOptions.GeoM.Rotate(math.Atan2(y2-y1, x2-x1))
 	drawOptions.GeoM.Translate(x1, y1)

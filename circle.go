@@ -188,7 +188,7 @@ func (c *Circle) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	if !c.visible {
 		return
 	}
-	if c.outlineColorScale.A == 0 {
+	if c.outlineColorScale.A == 0 && c.fillColorScale.A == 0 {
 		return
 	}
 
@@ -216,6 +216,9 @@ func (c *Circle) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 
 	var drawOptions ebiten.DrawRectShaderOptions
 	drawOptions.Uniforms = c.shaderData
+	if opts.Blend != nil {
+		drawOptions.Blend = *opts.Blend
+	}
 	drawOptions.GeoM.Translate(pos.X, pos.Y)
 	if c.dashLength == 0 {
 		dst.DrawRectShader(int(width), int(width), globalCache.circleOutlineShader, &drawOptions)

@@ -359,6 +359,9 @@ func (s *Sprite) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	}
 
 	var drawOptions ebiten.DrawImageOptions
+	if opts.Blend != nil {
+		drawOptions.Blend = *opts.Blend
+	}
 	drawOptions.ColorScale = s.ebitenColorScale
 
 	if s.IsHorizontallyFlipped() {
@@ -413,6 +416,9 @@ func (s *Sprite) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 
 	srcImageBounds := srcImage.Bounds()
 	var options ebiten.DrawRectShaderOptions
+	if opts.Blend != nil {
+		options.Blend = *opts.Blend
+	}
 	options.GeoM = drawOptions.GeoM
 	options.ColorScale = drawOptions.ColorScale
 	options.Images[0] = srcImage

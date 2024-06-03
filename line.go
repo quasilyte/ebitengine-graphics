@@ -150,5 +150,5 @@ func (l *Line) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 
 	pos1 := l.BeginPos.Resolve().Add(opts.Offset)
 	pos2 := l.EndPos.Resolve().Add(opts.Offset)
-	drawLine(dst, pos1, pos2, l.width, l.ebitenColorScale)
+	drawLine(dst, opts.Blend, pos1, pos2, l.width, l.ebitenColorScale)
 }
