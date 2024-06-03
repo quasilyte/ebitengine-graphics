@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/text" //nolint can't use v2/ text right now
 	"github.com/quasilyte/gmath"
 	"golang.org/x/image/font"
 )
