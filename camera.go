@@ -124,28 +124,33 @@ func (c *Camera) GetPos() gmath.Vec {
 // SetPos assigns a new offset to the camera.
 // It will be clamped to fit the camera bounds.
 //
+// The return value reports whether the position was actually updated.
+//
 // The offset parameter should be in world coordinates.
-func (c *Camera) SetPos(pos gmath.Vec) {
-	c.setOffset(pos)
+func (c *Camera) SetPos(pos gmath.Vec) bool {
+	return c.setOffset(pos)
 }
 
 // Pan adds the specified camera position delta to the camera's current offset.
 // It's a shorthand to c.SetPos(c.GetPos().Add(delta)).
 // The same clamping rules apply as in [SetPos].
-func (c *Camera) Pan(delta gmath.Vec) {
+//
+// The return value reports whether the position was actually updated.
+func (c *Camera) Pan(delta gmath.Vec) bool {
 	if delta.IsZero() {
-		return
+		return false
 	}
-	c.setOffset(c.offset.Add(delta))
+	return c.setOffset(c.offset.Add(delta))
 }
 
-func (c *Camera) setOffset(offset gmath.Vec) {
+func (c *Camera) setOffset(offset gmath.Vec) bool {
 	offset = c.clampOffset(offset)
 	if c.offset == offset {
-		return
+		return false
 	}
 	c.offset = offset
 	c.drawOffset = offset.Rounded()
+	return true
 }
 
 func (c *Camera) getDrawOffset() gmath.Vec {
