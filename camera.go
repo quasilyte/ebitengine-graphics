@@ -112,6 +112,17 @@ func (c *Camera) GetCenterPos() gmath.Vec {
 	return c.offset.Add(c.areaSize.Mulf(0.5)).Rounded()
 }
 
+// SetCenterPos centers the camera around given position.
+// After the clamping rules apply, the pos may end up not being in the perfect
+// center of the camera's viewport rect.
+//
+// The return value reports whether the position was actually updated.
+//
+// The pos parameter should be in world coordinates.
+func (c *Camera) SetCenterPos(pos gmath.Vec) bool {
+	return c.setOffset(pos.Sub(c.areaSize.Mulf(0.5)))
+}
+
 // GetPos returns the camera current offset.
 // The pos is given for the top-left corner of the camera's viewport rect.
 // To get the center position, use [GetCenterPos].
@@ -126,7 +137,7 @@ func (c *Camera) GetPos() gmath.Vec {
 //
 // The return value reports whether the position was actually updated.
 //
-// The offset parameter should be in world coordinates.
+// The pos parameter should be in world coordinates.
 func (c *Camera) SetPos(pos gmath.Vec) bool {
 	return c.setOffset(pos)
 }
