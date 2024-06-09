@@ -115,7 +115,7 @@ func (d *SceneDrawer) Draw(dst *ebiten.Image) {
 		}
 		for i, l := range d.layers {
 			if i < 64 {
-				if uint64(i)&camera.c.layerMask == 0 {
+				if uint64(1<<i)&camera.c.layerMask == 0 {
 					continue
 				}
 			}
