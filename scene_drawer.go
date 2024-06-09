@@ -103,9 +103,6 @@ func (d *SceneDrawer) Draw(dst *ebiten.Image) {
 
 	for i := range cameras {
 		camera := &cameras[i]
-		if !camera.c.IsVisible() {
-			continue
-		}
 
 		cameraDst := dst
 		if d.cameraNeedsTmpBuf(camera) {
@@ -117,8 +114,10 @@ func (d *SceneDrawer) Draw(dst *ebiten.Image) {
 			Offset: camera.c.getDrawOffset(),
 		}
 		for i, l := range d.layers {
-			if uint64(i)&camera.c.layerMask == 0 {
-				continue
+			if i < 64 {
+				if uint64(i)&camera.c.layerMask == 0 {
+					continue
+				}
 			}
 			l.DrawWithOptions(cameraDst, options)
 		}

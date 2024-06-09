@@ -5,6 +5,28 @@ import (
 	"github.com/quasilyte/gmath"
 )
 
+// Camera implements a 2D camera for the [SceneDrawer].
+//
+// It's pretty barebones, you might want to wrap it into
+// your game's camera type and add functionality like lerping between A and B.
+// Add [Camera] itself into the [SceneDrawer] and put it inside your
+// own camera implementation. Then call appropriate things like [SetPos]
+// and [Pan] on the wrapped camera to implement something fancier.
+//
+// Some terminology:
+// * screen coordinates - min=(0,0) max=(windowWidth,windowHeight)
+// * world coordinates - arbitrary values that spefify the object's location inside the game world
+//
+// Let's assume there is a world coordinate {32, 32};
+// if the camera's offset is {0, 0}, then screen coordinate is {32, 32},
+// if the camera's offset is {32, 32}, then screen coordinate is {0, 0}.
+//
+// Converting coordinates:
+// * screen to world: screenPos.Add(camera.GetPos())
+// * world to screen: worldPos.Sub(camera.GetPos())
+//
+// Pay attention to the docs, they should tell you which kind of a position
+// is expected for an argument and/or method's return value.
 type Camera struct {
 	offset     gmath.Vec
 	drawOffset gmath.Vec // Rounded
@@ -15,12 +37,9 @@ type Camera struct {
 	areaSize gmath.Vec
 
 	layerMask uint64
-
-	visible  bool
-	disposed bool
 }
 
-// NewCamera creates a new camera for the drawer.
+// NewCamera creates a new camera for the [SceneDrawer].
 //
 // It covers the entire screen by default.
 // Use [SetViewportRect] to change that.
@@ -31,7 +50,6 @@ type Camera struct {
 func NewCamera() *Camera {
 	w, h := ebiten.WindowSize()
 	camera := &Camera{
-		visible:   true,
 		layerMask: ^uint64(0),
 	}
 	camera.SetViewportRect(gmath.Rect{
@@ -50,43 +68,70 @@ func (c *Camera) SetBounds(bounds gmath.Rect) {
 	c.bounds = bounds
 }
 
+// GetViewportRect returns the camera's rendering rectangle.
+//
+// This rectangle is in screen coordinates, meaning it is unaffected by the camera pos.
+func (c *Camera) GetViewportRect() gmath.Rect {
+	return c.areaRect
+}
+
+// SetViewportRect changes the camera's viewport area to render to.
+//
+// The rect is in screen coordinates.
 func (c *Camera) SetViewportRect(rect gmath.Rect) {
 	c.areaRect = rect
 	c.areaSize = rect.Size()
 }
 
-func (c *Camera) GetViewportRect() gmath.Rect {
-	return c.areaRect
-}
-
+// GetLayerMask returns the current camera's layer bitmask.
+// See [SetLayerMask] doc comment to learn more about the bitmask.
 func (c *Camera) GetLayerMask() uint64 {
 	return c.layerMask
 }
 
+// SetLayerMask updates the camera's layer bitmask.
+//
+// The nth bit of the mask controls whether nth layer should be
+// rendered onto the camera.
+// By default, the camera layermask is "all ones", meaning all layers are rendered.
+//
+// This mask is useful when you want to draw some layers only to particular cameras.
+// For the simplest kinds of games this feature is not needed and you may leave it as is.
+//
+// This bitmask can affect up to first 64 layers, any other layer is always enabled.
 func (c *Camera) SetLayerMask(mask uint64) {
 	c.layerMask = mask
 }
 
-func (c *Camera) Dispose() {
-	c.disposed = true
+// GetCenterPos returns the camera current offset translated
+// to the viewport rect's center.
+// To get the untranslated position, use [GetPos].
+//
+// The returned pos is in world coordinates.
+func (c *Camera) GetCenterPos() gmath.Vec {
+	return c.offset.Add(c.areaSize.Mulf(0.5)).Rounded()
 }
 
-func (c *Camera) IsDisposed() bool {
-	return c.disposed
-}
-
-func (c *Camera) IsVisible() bool { return c.visible }
-
-func (c *Camera) SetVisibility(visible bool) { c.visible = visible }
-
-func (c *Camera) GetOffset() gmath.Vec {
+// GetPos returns the camera current offset.
+// The pos is given for the top-left corner of the camera's viewport rect.
+// To get the center position, use [GetCenterPos].
+//
+// The returned pos is in world coordinates.
+func (c *Camera) GetPos() gmath.Vec {
 	return c.offset
 }
 
-func (c *Camera) SetOffset(offset gmath.Vec) {
-	c.setOffset(offset)
+// SetPos assigns a new offset to the camera.
+// It will be clamped to fit the camera bounds.
+//
+// The offset parameter should be in world coordinates.
+func (c *Camera) SetPos(pos gmath.Vec) {
+	c.setOffset(pos)
 }
 
+// Pan adds the specified camera position delta to the camera's current offset.
+// It's a shorthand to c.SetPos(c.GetPos().Add(delta)).
+// The same clamping rules apply as in [SetPos].
 func (c *Camera) Pan(delta gmath.Vec) {
 	if delta.IsZero() {
 		return
