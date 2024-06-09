@@ -13,8 +13,11 @@ Graphical objects list:
 
 * Sprite
 * Line
+* Circle (supports dashed style)
 * Rect
+* Label
 * Container
+* Canvas
 
 > Missing some graphical object? [Tell us about it](https://github.com/quasilyte/ebitengine-graphics/issues/new).
 
