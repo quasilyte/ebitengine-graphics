@@ -21,6 +21,8 @@ Graphical objects list:
 
 > Missing some graphical object? [Tell us about it](https://github.com/quasilyte/ebitengine-graphics/issues/new).
 
+It also supports a basic camera and layers implementation.
+
 ## Installation
 
 ```bash

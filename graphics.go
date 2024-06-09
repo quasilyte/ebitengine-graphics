@@ -18,10 +18,10 @@ type DrawOptions struct {
 	Blend *ebiten.Blend
 }
 
+// TODO: make it exported?
 type object interface {
+	gsceneGraphics
+
 	DrawWithOptions(dst *ebiten.Image, o DrawOptions)
-
-	IsDisposed() bool
-
 	Dispose()
 }
