@@ -1,6 +1,7 @@
 package graphics
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/quasilyte/gmath"
 )
 
@@ -10,16 +11,36 @@ type Camera struct {
 
 	bounds gmath.Rect
 
-	viewportSize gmath.Vec
+	areaRect gmath.Rect
+	areaSize gmath.Vec
 
+	layerMask uint64
+
+	visible  bool
 	disposed bool
 }
 
+// NewCamera creates a new camera for the drawer.
+//
+// It covers the entire screen by default.
+// Use [SetViewportRect] to change that.
+//
+// The camera has no bounds by default, use [SetBounds] to set panning limits.
+//
+// It's advised to only call this function after Ebitengine game has already started.
 func NewCamera() *Camera {
-	return &Camera{}
+	w, h := ebiten.WindowSize()
+	camera := &Camera{
+		visible:   true,
+		layerMask: ^uint64(0),
+	}
+	camera.SetViewportRect(gmath.Rect{
+		Max: gmath.Vec{X: float64(w), Y: float64(h)},
+	})
+	return camera
 }
 
-// SetBounds sets the camera display limits.
+// SetBounds sets the camera panning limits.
 //
 // The provided rectangle should not be smaller than
 // camera's world size (in the simplest case, bounds=worldSize).
@@ -29,6 +50,23 @@ func (c *Camera) SetBounds(bounds gmath.Rect) {
 	c.bounds = bounds
 }
 
+func (c *Camera) SetViewportRect(rect gmath.Rect) {
+	c.areaRect = rect
+	c.areaSize = rect.Size()
+}
+
+func (c *Camera) GetViewportRect() gmath.Rect {
+	return c.areaRect
+}
+
+func (c *Camera) GetLayerMask() uint64 {
+	return c.layerMask
+}
+
+func (c *Camera) SetLayerMask(mask uint64) {
+	c.layerMask = mask
+}
+
 func (c *Camera) Dispose() {
 	c.disposed = true
 }
@@ -36,6 +74,10 @@ func (c *Camera) Dispose() {
 func (c *Camera) IsDisposed() bool {
 	return c.disposed
 }
+
+func (c *Camera) IsVisible() bool { return c.visible }
+
+func (c *Camera) SetVisibility(visible bool) { c.visible = visible }
 
 func (c *Camera) GetOffset() gmath.Vec {
 	return c.offset
@@ -73,7 +115,7 @@ func (c *Camera) clampOffset(offset gmath.Vec) gmath.Vec {
 		return offset
 	}
 
-	offset.X = gmath.Clamp(offset.X, c.bounds.Min.X, c.bounds.Max.X-c.viewportSize.X)
-	offset.Y = gmath.Clamp(offset.Y, c.bounds.Min.Y, c.bounds.Max.Y-c.viewportSize.Y)
+	offset.X = gmath.Clamp(offset.X, c.bounds.Min.X, c.bounds.Max.X-c.areaSize.X)
+	offset.Y = gmath.Clamp(offset.Y, c.bounds.Min.Y, c.bounds.Max.Y-c.areaSize.Y)
 	return offset
 }
