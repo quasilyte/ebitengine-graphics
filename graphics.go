@@ -23,5 +23,4 @@ type object interface {
 	gsceneGraphics
 
 	DrawWithOptions(dst *ebiten.Image, o DrawOptions)
-	Dispose()
 }

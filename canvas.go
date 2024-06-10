@@ -57,7 +57,7 @@ func (c *Canvas) Draw(dst *ebiten.Image) {
 	c.DrawWithOptions(dst, DrawOptions{})
 }
 
-func (c *Canvas) AddChild(o object) {
+func (c *Canvas) AddChild(o disposableObject) {
 	c.container.AddChild(o)
 }
 
