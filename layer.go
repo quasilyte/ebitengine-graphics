@@ -4,16 +4,23 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Layer is a simple layer that renders objects in the order they were added.
+//
+// The objects inside this layer are displayed with respect to the camera transformation.
+//
+// It expects graphics to implement [Object] interface.
+// If something implements only a simple gscene Graphics interface,
+// use [StaticLayer].
 type Layer struct {
-	objects []object
+	objects []Object
 }
 
 func NewLayer() *Layer {
-	return &Layer{objects: make([]object, 0, 16)}
+	return &Layer{objects: make([]Object, 0, 16)}
 }
 
-func (l *Layer) AddChild(o object) {
-	l.objects = append(l.objects, o)
+func (l *Layer) AddChild(g gsceneGraphics) {
+	l.objects = append(l.objects, g.(Object))
 }
 
 func (l *Layer) Update(_ float64) {

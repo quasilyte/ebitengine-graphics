@@ -10,21 +10,21 @@ type Container struct {
 
 	Rotation *gmath.Rad
 
-	objects []disposableObject
+	objects []DisposableObject
 
 	visible  bool
 	disposed bool
 }
 
-type disposableObject interface {
-	object
+type DisposableObject interface {
+	Object
 
 	Dispose()
 }
 
 func NewContainer() *Container {
 	return &Container{
-		objects: make([]disposableObject, 0, 4),
+		objects: make([]DisposableObject, 0, 4),
 		visible: true,
 	}
 }
@@ -59,7 +59,7 @@ func (c *Container) Draw(dst *ebiten.Image) {
 	c.DrawWithOptions(dst, DrawOptions{})
 }
 
-func (c *Container) AddChild(o disposableObject) {
+func (c *Container) AddChild(o DisposableObject) {
 	c.objects = append(c.objects, o)
 }
 

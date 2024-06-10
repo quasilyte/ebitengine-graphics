@@ -34,7 +34,7 @@ type SceneLayerDrawer interface {
 
 	DrawWithOptions(dst *ebiten.Image, opts DrawOptions)
 
-	AddChild(o object)
+	AddChild(o gsceneGraphics)
 }
 
 // NewSceneDrawer creates a configured [gscene.Drawer] for the scene.
@@ -86,7 +86,7 @@ func (d *SceneDrawer) RemoveCamera(camera *Camera) {
 
 func (d *SceneDrawer) AddGraphics(o gsceneGraphics, layer int) {
 	l := d.layers[layer]
-	l.AddChild(o.(object))
+	l.AddChild(o)
 }
 
 func (d *SceneDrawer) Update(delta float64) {
