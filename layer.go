@@ -16,7 +16,7 @@ func (l *Layer) AddChild(o object) {
 	l.objects = append(l.objects, o)
 }
 
-func (l *Layer) Update(delta float64) {
+func (l *Layer) Update(_ float64) {
 	liveObjects := l.objects[:0]
 	for _, o := range l.objects {
 		if o.IsDisposed() {
