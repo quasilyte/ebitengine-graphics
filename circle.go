@@ -50,9 +50,9 @@ func NewCircle(r float64) *Circle {
 	c.shaderData = map[string]any{
 		"Radius":       float32(r),
 		"OutlineWidth": float32(1),
-		"FillColor":    c.fillColorScale.asVec4(),
+		"FillColor":    c.fillColorScale.AsVec4(),
 		"FillOffset":   float32(0),
-		"OutlineColor": c.outlineColorScale.asVec4(),
+		"OutlineColor": c.outlineColorScale.AsVec4(),
 		"DashLength":   float32(0),
 		"DashGap":      float32(0),
 		"Rotation":     float32(0),

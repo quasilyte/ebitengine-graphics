@@ -125,7 +125,13 @@ func (c ColorScale) ToHSL() (h, s, l float32) {
 	return rgb2hsl(c)
 }
 
-func (c *ColorScale) asVec4() []float32 {
+// AsVec3 returns a color scale as RGB slice (vec3 for shaders).
+func (c *ColorScale) AsVec3() []float32 {
+	return unsafe.Slice(&c.R, 3)
+}
+
+// AsVec4returns a color scale as RGBA slice (vec4 for shaders).
+func (c *ColorScale) AsVec4() []float32 {
 	return unsafe.Slice(&c.R, 4)
 }
 
