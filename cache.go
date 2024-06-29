@@ -1,13 +1,30 @@
 package graphics
 
 import (
+	"image/color"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/quasilyte/gmath"
 	"golang.org/x/image/font"
 )
 
 var globalCache = &cache{}
+
+func init() {
+	globalCache.whitePixel = ebiten.NewImage(1, 1)
+	globalCache.whitePixel.Fill(color.White)
+
+	// Just some pseudo-random fixed seed to make graphics
+	// somewhat random (it's used in particle systems).
+	// We can add a function to override the default seed
+	// if there is a feature request for it.
+	globalCache.rand.SetSeed(271828)
+
+	globalCache.scratchVertices = make([]ebiten.Vertex, 0, 24*4)
+	globalCache.scratchIndices = make([]uint16, 0, 24*6)
+	globalCache.scratchEmitterBatch = make([]*ParticleEmitter, 0, 8)
+}
 
 // cache is a storage that is shared between all
 // graphical elements.
@@ -18,6 +35,12 @@ type cache struct {
 	shadersCompiled           bool
 	circleOutlineShader       *ebiten.Shader
 	dashedCircleOutlineShader *ebiten.Shader
+
+	rand                gmath.Rand
+	whitePixel          *ebiten.Image
+	scratchEmitterBatch []*ParticleEmitter
+	scratchVertices     []ebiten.Vertex
+	scratchIndices      []uint16
 }
 
 type fontInfo struct {
