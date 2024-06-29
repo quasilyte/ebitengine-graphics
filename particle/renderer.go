@@ -1,9 +1,11 @@
-package graphics
+package particle
 
 import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	graphics "github.com/quasilyte/ebitengine-graphics"
+	"github.com/quasilyte/ebitengine-graphics/internal/cache"
 	"github.com/quasilyte/gmath"
 )
 
@@ -29,11 +31,11 @@ import (
 // - damping (slowdown)
 // - radial angle (?)
 
-// ParticleSystem describes a CPU particle emission template.
-// You can create multiple [ParticleEmitter] from this template.
+// Renderer describes a CPU particle emission template.
+// You can create multiple [Emitter] from this template.
 //
 // Usually, for each emission effect kind you create a separate system.
-// Then you create [ParticleEmitter] per object that needs that system.
+// Then you create [Emitter] per object that needs that system.
 // For more complicated cases when high customization of every emitter is required,
 // you might end up with almost 1-to-1 system and emitter ratio.
 // This should not be a problem.
@@ -45,7 +47,7 @@ import (
 // Experimental: particles are part of the experimental API and are subject to change.
 // You're encouraged to give feedback, but it might not be a good idea
 // to use it in your serious long-term project just yet.
-type ParticleSystem struct {
+type Renderer struct {
 	img *ebiten.Image
 
 	particleMinAngle  gmath.Rad
@@ -68,7 +70,7 @@ type ParticleSystem struct {
 
 	needsRandBits uint8
 
-	emitters []*ParticleEmitter
+	emitters []*Emitter
 }
 
 const (
@@ -78,39 +80,39 @@ const (
 	lifetimeRandBit
 )
 
-func NewParticleSystem() *ParticleSystem {
-	psys := &ParticleSystem{}
+func NewRenderer() *Renderer {
+	r := &Renderer{}
 
-	psys.SetEmitInterval(0.5)
-	psys.SetParticleLifetime(3, 3)
-	psys.SetParticleSpeed(32.0, 32.0)
-	psys.SetEmitBurst(1, 1)
-	psys.SetImage(globalCache.whitePixel)
+	r.SetEmitInterval(0.5)
+	r.SetParticleLifetime(3, 3)
+	r.SetParticleSpeed(32.0, 32.0)
+	r.SetEmitBurst(1, 1)
+	r.SetImage(cache.Global.WhitePixel)
 
-	return psys
+	return r
 }
 
-func (sys *ParticleSystem) SetImage(img *ebiten.Image) {
-	sys.img = img
+func (r *Renderer) SetImage(img *ebiten.Image) {
+	r.img = img
 }
 
-func (sys *ParticleSystem) SetEmitBurst(minAmount, maxAmount int) {
+func (r *Renderer) SetEmitBurst(minAmount, maxAmount int) {
 	amount := gmath.MakeRange(minAmount, maxAmount)
 	if !amount.InBounds(0, math.MaxUint8) {
 		panic("amount is not in [0, 255] bounds")
 	}
 	if amount.Min != 1 || amount.Max != 1 {
-		sys.emitBurstRangeSize = uint16(amount.Max) - uint16(amount.Min) + 1
-		sys.needsRandBits |= burstRandBit
+		r.emitBurstRangeSize = uint16(amount.Max) - uint16(amount.Min) + 1
+		r.needsRandBits |= burstRandBit
 	} else {
-		sys.emitBurstRangeSize = 0
-		sys.needsRandBits &^= burstRandBit
+		r.emitBurstRangeSize = 0
+		r.needsRandBits &^= burstRandBit
 	}
-	sys.minEmitBurst = uint8(amount.Min)
-	sys.maxEmitBurst = uint8(amount.Max)
+	r.minEmitBurst = uint8(amount.Min)
+	r.maxEmitBurst = uint8(amount.Max)
 }
 
-func (sys *ParticleSystem) SetParticleLifetime(minLifetime, maxLifetime float64) {
+func (r *Renderer) SetParticleLifetime(minLifetime, maxLifetime float64) {
 	lifetime := gmath.MakeRange(minLifetime, maxLifetime)
 	if !lifetime.IsValid() {
 		panic("invalid lifetime range")
@@ -121,84 +123,84 @@ func (sys *ParticleSystem) SetParticleLifetime(minLifetime, maxLifetime float64)
 	}
 
 	if lifetime.Min != lifetime.Max {
-		sys.needsRandBits |= lifetimeRandBit
+		r.needsRandBits |= lifetimeRandBit
 	} else {
-		sys.needsRandBits &^= lifetimeRandBit
+		r.needsRandBits &^= lifetimeRandBit
 	}
 
-	sys.particleMaxLifetime = float32(lifetime.Max)
-	sys.particleMaxLifetimeMS = sys.particleMaxLifetime * 1000
-	sys.particleLifetimeStep = float32((lifetime.Max - lifetime.Min) / 255)
+	r.particleMaxLifetime = float32(lifetime.Max)
+	r.particleMaxLifetimeMS = r.particleMaxLifetime * 1000
+	r.particleLifetimeStep = float32((lifetime.Max - lifetime.Min) / 255)
 
 	// To avoid call-order dependency, update the particle speed
 	// and velocity multiplier when changing the lifetime.
-	sys.adjustParticleSpeed(sys.particleMinSpeed, sys.particleMaxSpeed)
+	r.adjustParticleSpeed(r.particleMinSpeed, r.particleMaxSpeed)
 }
 
-func (sys *ParticleSystem) SetParticleDirection(dir, spread gmath.Rad) {
+func (r *Renderer) SetParticleDirection(dir, spread gmath.Rad) {
 	angle := gmath.Range[gmath.Rad]{
 		Min: dir - spread*0.5,
 		Max: dir + spread*0.5,
 	}
 
-	sys.particleMinAngle = angle.Min
-	sys.particleMaxAngle = angle.Max
+	r.particleMinAngle = angle.Min
+	r.particleMaxAngle = angle.Max
 
 	if angle.Min != angle.Max {
-		sys.particleAngleStep = (angle.Max - angle.Min) / 255
-		sys.needsRandBits |= angleRandBit
+		r.particleAngleStep = (angle.Max - angle.Min) / 255
+		r.needsRandBits |= angleRandBit
 	} else {
-		sys.particleAngleStep = 0
-		sys.needsRandBits &^= angleRandBit
+		r.particleAngleStep = 0
+		r.needsRandBits &^= angleRandBit
 	}
 }
 
-func (sys *ParticleSystem) SetParticleSpeed(minSpeed, maxSpeed float64) {
+func (r *Renderer) SetParticleSpeed(minSpeed, maxSpeed float64) {
 	speed := gmath.MakeRange(minSpeed, maxSpeed)
 	if speed.Max < speed.Min {
 		panic("maxSpeed can't be less than speed.Min")
 	}
-	sys.adjustParticleSpeed(float32(speed.Min), float32(speed.Max))
+	r.adjustParticleSpeed(float32(speed.Min), float32(speed.Max))
 }
 
-func (sys *ParticleSystem) adjustParticleSpeed(minSpeed, maxSpeed float32) {
-	sys.particleMinSpeed = minSpeed
-	sys.particleMaxSpeed = maxSpeed
-	sys.particleSpeed = sys.particleMaxLifetime * sys.particleMinSpeed
+func (r *Renderer) adjustParticleSpeed(minSpeed, maxSpeed float32) {
+	r.particleMinSpeed = minSpeed
+	r.particleMaxSpeed = maxSpeed
+	r.particleSpeed = r.particleMaxLifetime * r.particleMinSpeed
 
 	if minSpeed != maxSpeed {
-		sys.particleSpeedStep = (maxSpeed - minSpeed) / 255
-		sys.needsRandBits |= speedRandBit
+		r.particleSpeedStep = (maxSpeed - minSpeed) / 255
+		r.needsRandBits |= speedRandBit
 	} else {
-		sys.particleSpeedStep = 0
-		sys.needsRandBits &^= speedRandBit
+		r.particleSpeedStep = 0
+		r.needsRandBits &^= speedRandBit
 	}
 }
 
-func (sys *ParticleSystem) SetEmitInterval(t float64) {
-	sys.emitInterval = float32(t)
+func (r *Renderer) SetEmitInterval(t float64) {
+	r.emitInterval = float32(t)
 }
 
-func (sys *ParticleSystem) NewEmitter() *ParticleEmitter {
-	e := newParticleEmitter(sys)
-	sys.emitters = append(sys.emitters, e)
+func (r *Renderer) NewEmitter() *Emitter {
+	e := newParticleEmitter(r)
+	r.emitters = append(r.emitters, e)
 	return e
 }
 
-func (sys *ParticleSystem) Draw(dst *ebiten.Image) {
-	sys.DrawWithOptions(dst, DrawOptions{})
+func (r *Renderer) Draw(dst *ebiten.Image) {
+	r.DrawWithOptions(dst, graphics.DrawOptions{})
 }
 
-func (sys *ParticleSystem) drawBatch(dst *ebiten.Image, opts DrawOptions, emitters []*ParticleEmitter) {
+func (r *Renderer) drawBatch(dst *ebiten.Image, opts graphics.DrawOptions, emitters []*Emitter) {
 	// Use pre-allocated slices.
-	vertices := globalCache.scratchVertices[:0]
-	indices := globalCache.scratchIndices[:0]
+	vertices := cache.Global.ScratchVertices[:0]
+	indices := cache.Global.ScratchIndices[:0]
 	defer func() {
-		globalCache.scratchVertices = vertices[:0]
-		globalCache.scratchIndices = indices[:0]
+		cache.Global.ScratchVertices = vertices[:0]
+		cache.Global.ScratchIndices = indices[:0]
 	}()
 
-	img := sys.img
+	img := r.img
 
 	w, h := float32(img.Bounds().Dx()), float32(img.Bounds().Dy())
 	idx := uint16(0)
@@ -245,16 +247,16 @@ func (sys *ParticleSystem) drawBatch(dst *ebiten.Image, opts DrawOptions, emitte
 	dst.DrawTriangles(vertices, indices, img, &drawOptions)
 }
 
-func (sys *ParticleSystem) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
+func (r *Renderer) DrawWithOptions(dst *ebiten.Image, opts graphics.DrawOptions) {
 	const batchThreshold = math.MaxUint16 / 24 // Doesn't have to be bigger
 	batchParticles := 0
 
-	batch := globalCache.scratchEmitterBatch[:0]
+	batch := sharedResources.batchSlice[:0]
 	defer func() {
-		globalCache.scratchEmitterBatch = batch[:0]
+		sharedResources.batchSlice = batch[:0]
 	}()
 
-	for _, e := range sys.emitters {
+	for _, e := range r.emitters {
 		if !e.visible {
 			continue
 		}
@@ -263,7 +265,7 @@ func (sys *ParticleSystem) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) 
 			continue
 		}
 		if batchParticles+n > batchThreshold {
-			sys.drawBatch(dst, opts, batch)
+			r.drawBatch(dst, opts, batch)
 			batch = batch[:0]
 			batchParticles = 0
 		} else {
@@ -272,6 +274,6 @@ func (sys *ParticleSystem) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) 
 		}
 	}
 	if len(batch) != 0 {
-		sys.drawBatch(dst, opts, batch)
+		r.drawBatch(dst, opts, batch)
 	}
 }

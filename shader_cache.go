@@ -4,6 +4,7 @@ import (
 	_ "embed"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/quasilyte/ebitengine-graphics/internal/cache"
 )
 
 var (
@@ -21,10 +22,10 @@ var (
 // Objects that require shaders so far:
 // * Circle
 func CompileShaders() {
-	if globalCache.shadersCompiled {
+	if cache.Global.ShadersCompiled {
 		return
 	}
-	globalCache.shadersCompiled = true
+	cache.Global.ShadersCompiled = true
 
 	mustCompileShader := func(src []byte) *ebiten.Shader {
 		s, err := ebiten.NewShader(src)
@@ -34,12 +35,12 @@ func CompileShaders() {
 		return s
 	}
 
-	globalCache.circleOutlineShader = mustCompileShader(shaderCircleOutline)
-	globalCache.dashedCircleOutlineShader = mustCompileShader(shaderDashedCircleOutline)
+	cache.Global.CircleOutlineShader = mustCompileShader(shaderCircleOutline)
+	cache.Global.DashedCircleOutlineShader = mustCompileShader(shaderDashedCircleOutline)
 }
 
 func requireShaders() {
-	if globalCache.shadersCompiled {
+	if cache.Global.ShadersCompiled {
 		return
 	}
 	panic("call graphics.CompileShaders once to use this function")

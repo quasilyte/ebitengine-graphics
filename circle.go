@@ -2,6 +2,7 @@ package graphics
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/quasilyte/ebitengine-graphics/internal/cache"
 	"github.com/quasilyte/gmath"
 )
 
@@ -221,8 +222,8 @@ func (c *Circle) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	}
 	drawOptions.GeoM.Translate(pos.X, pos.Y)
 	if c.dashLength == 0 {
-		dst.DrawRectShader(int(width), int(width), globalCache.circleOutlineShader, &drawOptions)
+		dst.DrawRectShader(int(width), int(width), cache.Global.CircleOutlineShader, &drawOptions)
 	} else {
-		dst.DrawRectShader(int(width), int(width), globalCache.dashedCircleOutlineShader, &drawOptions)
+		dst.DrawRectShader(int(width), int(width), cache.Global.DashedCircleOutlineShader, &drawOptions)
 	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text" //nolint can't use v2/ text right now
+	"github.com/quasilyte/ebitengine-graphics/internal/cache"
 	"github.com/quasilyte/gmath"
 	"golang.org/x/image/font"
 )
@@ -99,7 +100,7 @@ const (
 )
 
 func NewLabel(ff font.Face) *Label {
-	fontID := globalCache.internFontFace(ff)
+	fontID := cache.Global.InternFontFace(ff)
 	return &Label{
 		fontID: fontID,
 		flags:  labelFlagVisible,
@@ -221,9 +222,9 @@ func (l *Label) SetVisibility(visible bool) {
 func (l *Label) SetText(s string) {
 	l.text = s
 
-	fontInfo := globalCache.fontInfoList[l.fontID]
+	fontInfo := cache.Global.FontInfoList[l.fontID]
 
-	bounds := text.BoundString(fontInfo.ff, l.text) //nolint (font.BoundString is different)
+	bounds := text.BoundString(fontInfo.Face, l.text) //nolint (font.BoundString is different)
 	l.boundsWidth = uint16(bounds.Dx())
 	l.boundsHeight = uint16(bounds.Dy())
 
@@ -248,10 +249,10 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	pos := l.Pos.Resolve()
 	offset := opts.Offset
 
-	fontInfo := globalCache.fontInfoList[l.fontID]
+	fontInfo := cache.Global.FontInfoList[l.fontID]
 
 	// Adjust the pos, since "dot position" (baseline) is not a top-left corner.
-	pos.Y += fontInfo.capHeight
+	pos.Y += fontInfo.CapHeight
 
 	numLines := strings.Count(l.text, "\n") + 1
 
@@ -273,7 +274,7 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 }
 
 func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect, pos, offset gmath.Vec, clr ebiten.ColorScale) {
-	fontInfo := globalCache.fontInfoList[l.fontID]
+	fontInfo := cache.Global.FontInfoList[l.fontID]
 	containerRect := rect
 
 	var drawOptions ebiten.DrawImageOptions
@@ -286,7 +287,7 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 	if l.GetAlignHorizontal() == AlignHorizontalLeft {
 		drawOptions.GeoM.Translate(math.Round(pos.X), math.Round(pos.Y))
 		drawOptions.GeoM.Translate(offset.X, offset.Y)
-		text.DrawWithOptions(dst, l.text, fontInfo.ff, &drawOptions)
+		text.DrawWithOptions(dst, l.text, fontInfo.Face, &drawOptions)
 		return
 	}
 
@@ -299,7 +300,7 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 			lineText = textRemaining[:nextLine]
 			textRemaining = textRemaining[nextLine+len("\n"):]
 		}
-		lineBounds := text.BoundString(fontInfo.ff, lineText) //nolint (font.BoundString is different)
+		lineBounds := text.BoundString(fontInfo.Face, lineText) //nolint (font.BoundString is different)
 		lineBoundsWidth := float64(lineBounds.Dx())
 		offsetX := 0.0
 		switch l.GetAlignHorizontal() {
@@ -311,11 +312,11 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 		drawOptions.GeoM.Reset()
 		drawOptions.GeoM.Translate(math.Round(pos.X+offsetX), math.Round(pos.Y+offsetY))
 		drawOptions.GeoM.Translate(offset.X, offset.Y)
-		text.DrawWithOptions(dst, lineText, fontInfo.ff, &drawOptions)
+		text.DrawWithOptions(dst, lineText, fontInfo.Face, &drawOptions)
 		if nextLine == -1 {
 			break
 		}
-		offsetY += fontInfo.lineHeight
+		offsetY += fontInfo.LineHeight
 	}
 }
 
@@ -394,10 +395,10 @@ func (l *Label) containerRect(pos gmath.Vec) gmath.Rect {
 }
 
 func (l *Label) estimateHeight(numLines int) float64 {
-	fontInfo := globalCache.fontInfoList[l.fontID]
-	estimatedHeight := fontInfo.capHeight
+	fontInfo := cache.Global.FontInfoList[l.fontID]
+	estimatedHeight := fontInfo.CapHeight
 	if numLines >= 2 {
-		estimatedHeight += (float64(numLines) - 1) * fontInfo.lineHeight
+		estimatedHeight += (float64(numLines) - 1) * fontInfo.LineHeight
 	}
 	if l.shadow.enabled {
 		estimatedHeight++

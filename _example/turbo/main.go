@@ -6,7 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	graphics "github.com/quasilyte/ebitengine-graphics"
+	"github.com/quasilyte/ebitengine-graphics/particle"
 	"github.com/quasilyte/gmath"
 )
 
@@ -42,25 +42,25 @@ func main() {
 }
 
 type game struct {
-	psys   *graphics.ParticleSystem
-	player *player
+	particles *particle.Renderer
+	player    *player
 }
 
 type player struct {
 	img      *ebiten.Image
 	rotation gmath.Rad
 	pos      gmath.Vec
-	emitter  *graphics.ParticleEmitter
+	emitter  *particle.Emitter
 }
 
 func (g *game) init() {
-	g.psys = graphics.NewParticleSystem()
-	g.psys.SetParticleSpeed(64.0, 96.0)
-	g.psys.SetEmitInterval(0.05)
+	g.particles = particle.NewRenderer()
+	g.particles.SetParticleSpeed(64.0, 96.0)
+	g.particles.SetEmitInterval(0.05)
 	// g.psys.SetEmitBurst(100, 200)
-	g.psys.SetEmitBurst(1, 4)
-	g.psys.SetParticleLifetime(1, 1)
-	g.psys.SetParticleDirection(math.Pi, 0.2)
+	g.particles.SetEmitBurst(1, 4)
+	g.particles.SetParticleLifetime(1, 1)
+	g.particles.SetParticleDirection(math.Pi, 0.2)
 
 	triangle := ebiten.NewImage(32, 32)
 	{
@@ -69,7 +69,7 @@ func (g *game) init() {
 		vector.StrokeLine(triangle, 32, 16, 1, 32, 2, clr, false)
 		vector.StrokeLine(triangle, 1, 32, 1, 1, 2, clr, false)
 	}
-	emitter := g.psys.NewEmitter()
+	emitter := g.particles.NewEmitter()
 	g.player = &player{
 		img:     triangle,
 		emitter: emitter,
@@ -81,7 +81,7 @@ func (g *game) init() {
 }
 
 func (g *game) Draw(screen *ebiten.Image) {
-	g.psys.Draw(screen)
+	g.particles.Draw(screen)
 
 	var opts ebiten.DrawImageOptions
 	{

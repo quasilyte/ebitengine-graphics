@@ -1,13 +1,14 @@
-package graphics
+package particle
 
 import (
 	"math"
 
+	"github.com/quasilyte/ebitengine-graphics/internal/cache"
 	"github.com/quasilyte/gmath"
 )
 
-type ParticleEmitter struct {
-	sys *ParticleSystem
+type Emitter struct {
+	sys *Renderer
 
 	particles []particle
 
@@ -52,17 +53,17 @@ type particle struct {
 	origPos gmath.Vec32
 }
 
-func newParticleEmitter(sys *ParticleSystem) *ParticleEmitter {
-	return &ParticleEmitter{
+func newParticleEmitter(sys *Renderer) *Emitter {
+	return &Emitter{
 		sys:       sys,
 		particles: make([]particle, 0, 8),
 		visible:   true,
 	}
 }
 
-func (e *ParticleEmitter) SetVisibility(visible bool) { e.visible = visible }
+func (e *Emitter) SetVisibility(visible bool) { e.visible = visible }
 
-func (e *ParticleEmitter) SetEmitting(emitting bool) {
+func (e *Emitter) SetEmitting(emitting bool) {
 	if e.emitting == emitting {
 		return
 	}
@@ -71,15 +72,15 @@ func (e *ParticleEmitter) SetEmitting(emitting bool) {
 	e.emitting = emitting
 }
 
-func (e *ParticleEmitter) NumParticles() int {
+func (e *Emitter) NumParticles() int {
 	return len(e.particles)
 }
 
-func (e *ParticleEmitter) Update() {
+func (e *Emitter) Update() {
 	e.UpdateWithDelta(1.0 / 60.0)
 }
 
-func (e *ParticleEmitter) UpdateWithDelta(delta float64) {
+func (e *Emitter) UpdateWithDelta(delta float64) {
 	if e.emitting {
 		// With a very low emit interval, it's possible to have
 		// delta > emitInterval.
@@ -122,7 +123,7 @@ func (e *ParticleEmitter) UpdateWithDelta(delta float64) {
 	e.particles = live
 }
 
-func (e *ParticleEmitter) emit(t float32) {
+func (e *Emitter) emit(t float32) {
 	pos := e.Pos.Resolve()
 	if !e.PivotOffset.IsZero() {
 		offset := e.PivotOffset
@@ -138,7 +139,7 @@ func (e *ParticleEmitter) emit(t float32) {
 	randBits := uint64(0)
 	randSeq := uint64(0)
 	if e.sys.needsRandBits != 0 {
-		randBits = globalCache.rand.Uint64()
+		randBits = cache.Global.Rand.Uint64()
 	}
 
 	numParticles := 1
