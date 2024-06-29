@@ -54,11 +54,17 @@ type player struct {
 }
 
 func (g *game) init() {
-	g.particles = particle.NewRenderer()
+	tmpl := particle.NewTemplate()
+	tmpl.SetSpawnPosFunc(func(ctx *particle.SpawnContext) gmath.Vec {
+		yrand := ctx.Rand() - 0.5
+		return gmath.Vec{Y: yrand * 32}
+	})
+
+	g.particles = particle.NewRenderer(tmpl)
 	g.particles.SetParticleSpeed(64.0, 96.0)
-	g.particles.SetEmitInterval(0.05)
+	g.particles.SetEmitInterval(0.02)
 	// g.psys.SetEmitBurst(100, 200)
-	g.particles.SetEmitBurst(1, 4)
+	g.particles.SetEmitBurst(2, 5)
 	g.particles.SetParticleLifetime(1, 1)
 	g.particles.SetParticleDirection(math.Pi, 0.2)
 
@@ -76,7 +82,7 @@ func (g *game) init() {
 		pos:     gmath.Vec{X: 256, Y: 256},
 	}
 	emitter.Pos.Base = &g.player.pos
-	emitter.PivotOffset.X = -12
+	emitter.PivotOffset.X = -16
 	emitter.Rotation = &g.player.rotation
 }
 

@@ -70,6 +70,8 @@ type Renderer struct {
 
 	needsRandBits uint8
 
+	template *Template
+
 	emitters []*Emitter
 }
 
@@ -80,8 +82,8 @@ const (
 	lifetimeRandBit
 )
 
-func NewRenderer() *Renderer {
-	r := &Renderer{}
+func NewRenderer(tmpl *Template) *Renderer {
+	r := &Renderer{template: tmpl}
 
 	r.SetEmitInterval(0.5)
 	r.SetParticleLifetime(3, 3)
@@ -209,11 +211,11 @@ func (r *Renderer) drawBatch(dst *ebiten.Image, opts graphics.DrawOptions, emitt
 			var pos ebiten.GeoM
 			{
 				origPos := p.origPos
-				progress := float32(p.countdown) / e.sys.particleMaxLifetimeMS
+				progress := float32(p.countdown) / e.r.particleMaxLifetimeMS
 
 				dir := gmath.Vec32{X: 1, Y: 0}
-				if e.sys.needsRandBits&angleRandBit != 0 {
-					angle := e.sys.particleMinAngle + e.sys.particleAngleStep*gmath.Rad(p.angleSeed)
+				if e.r.needsRandBits&angleRandBit != 0 {
+					angle := e.r.particleMinAngle + e.r.particleAngleStep*gmath.Rad(p.angleSeed)
 					angle += gmath.Rad(p.origAngle) * ((2 * math.Pi) / 256)
 					dir = dir.Rotated(angle)
 				}
@@ -221,7 +223,7 @@ func (r *Renderer) drawBatch(dst *ebiten.Image, opts graphics.DrawOptions, emitt
 				// The currentPos might benefit from rounding, but since particle drawing
 				// can be considered to be a hot path, I'm not sure we should do it.
 				// Rounding thousands vectors can add up.
-				speed := e.sys.particleSpeed + (e.sys.particleSpeedStep * float32(p.speedSeed))
+				speed := e.r.particleSpeed + (e.r.particleSpeedStep * float32(p.speedSeed))
 				currentPos := origPos.Add(dir.Mulf(speed).Mulf(1 - progress))
 
 				pos.Translate(opts.Offset.X, opts.Offset.Y)

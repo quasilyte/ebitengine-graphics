@@ -8,7 +8,7 @@ import (
 )
 
 type Emitter struct {
-	sys *Renderer
+	r *Renderer
 
 	particles []particle
 
@@ -26,6 +26,8 @@ type Emitter struct {
 
 	// emitDelay is a time (in seconds) until the next emission step.
 	emitDelay float32
+
+	spawnContext SpawnContext
 
 	emitting bool
 	visible  bool
@@ -55,7 +57,7 @@ type particle struct {
 
 func newParticleEmitter(sys *Renderer) *Emitter {
 	return &Emitter{
-		sys:       sys,
+		r:         sys,
 		particles: make([]particle, 0, 8),
 		visible:   true,
 	}
@@ -92,8 +94,8 @@ func (e *Emitter) UpdateWithDelta(delta float64) {
 		t := float32(0.0)
 		for e.emitDelay < 0 {
 			e.emit(t)
-			t += e.sys.emitInterval
-			e.emitDelay += e.sys.emitInterval
+			t += e.r.emitInterval
+			e.emitDelay += e.r.emitInterval
 		}
 	}
 
@@ -124,12 +126,16 @@ func (e *Emitter) UpdateWithDelta(delta float64) {
 }
 
 func (e *Emitter) emit(t float32) {
+	tmpl := e.r.template
+	e.spawnContext.generation++
+
 	pos := e.Pos.Resolve()
+	if tmpl.spawnPosFunc != nil {
+		offset := rotatedVec(tmpl.spawnPosFunc(&e.spawnContext), e.Rotation)
+		pos = pos.Add(offset)
+	}
 	if !e.PivotOffset.IsZero() {
-		offset := e.PivotOffset
-		if e.Rotation != nil {
-			offset = offset.Rotated(*e.Rotation)
-		}
+		offset := rotatedVec(e.PivotOffset, e.Rotation)
 		pos = pos.Add(offset)
 	}
 
@@ -138,25 +144,25 @@ func (e *Emitter) emit(t float32) {
 	// If system doesn't need any rand bits, don't bother generating it.
 	randBits := uint64(0)
 	randSeq := uint64(0)
-	if e.sys.needsRandBits != 0 {
+	if e.r.needsRandBits != 0 {
 		randBits = cache.Global.Rand.Uint64()
 	}
 
 	numParticles := 1
-	if e.sys.emitBurstRangeSize != 0 {
+	if e.r.emitBurstRangeSize != 0 {
 		// Calculate the range using the 8 rand bits.
 		x := uint16(fastrand(randBits, randSeq) & 0xff)
 		randSeq++
-		numParticles = int(e.sys.minEmitBurst + uint8(x*e.sys.emitBurstRangeSize/256))
+		numParticles = int(e.r.minEmitBurst + uint8(x*e.r.emitBurstRangeSize/256))
 	}
 
-	maxCountdown := uint16((e.sys.particleMaxLifetime - t) * 1000)
+	maxCountdown := uint16((e.r.particleMaxLifetime - t) * 1000)
 	for i := 0; i < numParticles; i++ {
 		countdown := maxCountdown
-		if e.sys.needsRandBits&lifetimeRandBit != 0 {
+		if e.r.needsRandBits&lifetimeRandBit != 0 {
 			x := uint8(fastrand(randBits, randSeq))
 			randSeq++
-			countdown -= uint16(e.sys.particleLifetimeStep * float32(x) * 1000)
+			countdown -= uint16(e.r.particleLifetimeStep * float32(x) * 1000)
 		}
 
 		origAngle := uint8(0)
@@ -173,13 +179,13 @@ func (e *Emitter) emit(t float32) {
 			},
 		}
 
-		if e.sys.needsRandBits&speedRandBit != 0 {
+		if e.r.needsRandBits&speedRandBit != 0 {
 			x := uint8(fastrand(randBits, randSeq))
 			randSeq++
 			p.speedSeed = x
 		}
 
-		if e.sys.needsRandBits&angleRandBit != 0 {
+		if e.r.needsRandBits&angleRandBit != 0 {
 			x := uint8(fastrand(randBits, randSeq))
 			randSeq++
 			p.angleSeed = x
