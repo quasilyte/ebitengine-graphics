@@ -20,6 +20,14 @@ github.com/quasilyte/gmath v0.0.0-20240531125710-d5d53ef3da4e h1:dLfF4aC2SuHp7tm
 github.com/quasilyte/gmath v0.0.0-20240531125710-d5d53ef3da4e/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
 github.com/quasilyte/gmath v0.0.0-20240609115014-06844cf1c3e2 h1:HltUgMkXt2Q91BgUQQ/+NVOnOYm5ne1zE8mxFb0q2LY=
 github.com/quasilyte/gmath v0.0.0-20240609115014-06844cf1c3e2/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
+github.com/quasilyte/gmath v0.0.0-20240627163657-fdfebcff2086 h1:fcA/rf4brmUSux/n5QN0RzOgxJU4wJ+A4ac+dmjpIpQ=
+github.com/quasilyte/gmath v0.0.0-20240627163657-fdfebcff2086/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
+github.com/quasilyte/gmath v0.0.0-20240627214436-9bf59466b852 h1:i8UhCdJ3SpUJaBIKx8TfykSvB6w3oYc3LcODj8w9I4Q=
+github.com/quasilyte/gmath v0.0.0-20240627214436-9bf59466b852/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
+github.com/quasilyte/gmath v0.0.0-20240627221438-bf070a64d75c h1:xifCe+Gex7ZSh11xoHJeZGvtJxwp9DxBxqXpGSPj6ow=
+github.com/quasilyte/gmath v0.0.0-20240627221438-bf070a64d75c/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
+github.com/quasilyte/gmath v0.0.0-20240627233252-84ce4895438e h1:nJFfpxl419+n6JU3aMJDCMBoLA423fx4LEXKSLDWRDo=
+github.com/quasilyte/gmath v0.0.0-20240627233252-84ce4895438e/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
 golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 h1:LfspQV/FYTatPTr/3HzIcmiUFH7PGP+OQ6mgDYo3yuQ=
 golang.org/x/exp v0.0.0-20240222234643-814bf88cf225/go.mod h1:CxmFvTBINI24O/j8iY7H1xHzx2i4OsyguNBmN/uPtqc=
 golang.org/x/image v0.16.0 h1:9kloLAKhUufZhA12l5fwnx2NZW39/we1UhBesW433jw=
