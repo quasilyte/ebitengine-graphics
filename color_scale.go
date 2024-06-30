@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/quasilyte/gmath"
 )
 
 // ColorScale is like ebiten.ColorScale, but its values don't need to be premultiplied.
@@ -113,6 +114,15 @@ func (c ColorScale) ScaleRGB(x float32) ColorScale {
 	c2.G *= x
 	c2.B *= x
 	return c2
+}
+
+func (c ColorScale) Lerp(target ColorScale, t float32) ColorScale {
+	return ColorScale{
+		R: gmath.Lerp(c.R, target.R, t),
+		G: gmath.Lerp(c.G, target.G, t),
+		B: gmath.Lerp(c.B, target.B, t),
+		A: gmath.Lerp(c.A, target.A, t),
+	}
 }
 
 // RotateHue returns a color scale with its hue rotated.

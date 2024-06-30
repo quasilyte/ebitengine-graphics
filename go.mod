@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.7.4
-	github.com/quasilyte/gmath v0.0.0-20240627233252-84ce4895438e
+	github.com/quasilyte/gmath v0.0.0-20240630003056-601485c420c5
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/image v0.16.0
 )
