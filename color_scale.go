@@ -116,6 +116,15 @@ func (c ColorScale) ScaleRGB(x float32) ColorScale {
 	return c2
 }
 
+func (c ColorScale) Mul(other ColorScale) ColorScale {
+	return ColorScale{
+		R: c.R * other.R,
+		G: c.G * other.G,
+		B: c.B * other.B,
+		A: c.A * other.A,
+	}
+}
+
 func (c ColorScale) Lerp(target ColorScale, t float32) ColorScale {
 	return ColorScale{
 		R: gmath.Lerp(c.R, target.R, t),
