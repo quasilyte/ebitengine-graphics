@@ -8,7 +8,7 @@ import (
 )
 
 type Emitter struct {
-	r *Renderer
+	tmpl *Template
 
 	particles []particle
 
@@ -27,24 +27,23 @@ type Emitter struct {
 	// emitDelay is a time (in seconds) until the next emission step.
 	emitDelay float32
 
-	spawnContext SpawnContext
+	idSeq      uint32
+	generation uint16
 
 	emitting bool
 	visible  bool
+	disposed bool
 }
 
 type particle struct {
-	// This is a packed countdown value that specifies the particle progression
-	// and its remaining lifetime.
-	// We're not using float32 here to save 16 bits.
-	// Instead, every countdown value is equal to 0.001 seconds (millisecond);
-	// therefore, the max value representable is ~65 seconds.
-	// It should be enough for 99.(9)% use cases.
-	countdown uint16
+	counter uint16
 
-	speedSeed uint8
-	angleSeed uint8
-	origAngle uint8 // 256 possible values: 2*PI/256
+	scalingSeed  uint8
+	speedSeed    uint8
+	angleSeed    uint8
+	lifetimeSeed uint8
+	origAngle    uint8
+	paletteIndex uint8
 
 	// Would use {uint16, uint16} here to save 4 bytes,
 	// but it can be desirable to support negative coords
@@ -55,12 +54,21 @@ type particle struct {
 	origPos gmath.Vec32
 }
 
-func newParticleEmitter(sys *Renderer) *Emitter {
-	return &Emitter{
-		r:         sys,
+func NewEmitter(tmpl *Template) *Emitter {
+	e := &Emitter{
+		tmpl:      tmpl,
 		particles: make([]particle, 0, 8),
 		visible:   true,
 	}
+	return e
+}
+
+func (e *Emitter) IsDisposed() bool {
+	return e.disposed
+}
+
+func (e *Emitter) Dispose() {
+	e.disposed = true
 }
 
 func (e *Emitter) SetVisibility(visible bool) { e.visible = visible }
@@ -94,8 +102,8 @@ func (e *Emitter) UpdateWithDelta(delta float64) {
 		t := float32(0.0)
 		for e.emitDelay < 0 {
 			e.emit(t)
-			t += e.r.emitInterval
-			e.emitDelay += e.r.emitInterval
+			t += e.tmpl.emitInterval
+			e.emitDelay += e.tmpl.emitInterval
 		}
 	}
 
@@ -113,27 +121,25 @@ func (e *Emitter) UpdateWithDelta(delta float64) {
 
 	live := e.particles[:0]
 	dt := uint16(deltaMS)
+	maxLifetime := uint16(1000 * e.tmpl.particleMaxLifetime)
+	lifetimeStep := e.tmpl.particleLifetimeStep
 	for _, p := range e.particles {
-		if dt > p.countdown {
-			// An underflow would occur.
-			// This particle is expired.
+		p.counter += dt
+		lifetime := maxLifetime - (uint16(p.lifetimeSeed) * lifetimeStep)
+		if p.counter > lifetime {
 			continue
 		}
-		p.countdown -= dt
 		live = append(live, p)
 	}
 	e.particles = live
 }
 
 func (e *Emitter) emit(t float32) {
-	tmpl := e.r.template
-	e.spawnContext.generation++
+	tmpl := e.tmpl
+	e.generation++
 
-	pos := e.Pos.Resolve()
-	if tmpl.spawnPosFunc != nil {
-		offset := rotatedVec(tmpl.spawnPosFunc(&e.spawnContext), e.Rotation)
-		pos = pos.Add(offset)
-	}
+	w, h := float64(e.tmpl.img.Bounds().Dx()), float64(e.tmpl.img.Bounds().Dy())
+	pos := e.Pos.Resolve().Sub(gmath.Vec{X: w * 0.5, Y: h * 0.5})
 	if !e.PivotOffset.IsZero() {
 		offset := rotatedVec(e.PivotOffset, e.Rotation)
 		pos = pos.Add(offset)
@@ -144,25 +150,43 @@ func (e *Emitter) emit(t float32) {
 	// If system doesn't need any rand bits, don't bother generating it.
 	randBits := uint64(0)
 	randSeq := uint64(0)
-	if e.r.needsRandBits != 0 {
+	if e.tmpl.needsRandBits != 0 {
 		randBits = cache.Global.Rand.Uint64()
 	}
 
 	numParticles := 1
-	if e.r.emitBurstRangeSize != 0 {
+	if e.tmpl.emitBurstRangeSize != 0 {
 		// Calculate the range using the 8 rand bits.
 		x := uint16(fastrand(randBits, randSeq) & 0xff)
 		randSeq++
-		numParticles = int(e.r.minEmitBurst + uint8(x*e.r.emitBurstRangeSize/256))
+		numParticles = int(e.tmpl.minEmitBurst + uint8(x*e.tmpl.emitBurstRangeSize/256))
 	}
 
-	maxCountdown := uint16((e.r.particleMaxLifetime - t) * 1000)
+	ctx := SpawnContext{emitter: e}
 	for i := 0; i < numParticles; i++ {
-		countdown := maxCountdown
-		if e.r.needsRandBits&lifetimeRandBit != 0 {
-			x := uint8(fastrand(randBits, randSeq))
+		ctx.id = e.idSeq
+		e.idSeq++
+		particlePos := pos
+		if tmpl.spawnOffsetFunc != nil {
+			offset := rotatedVec(tmpl.spawnOffsetFunc(ctx), e.Rotation)
+			particlePos = particlePos.Add(offset)
+		}
+
+		paletteIndex := uint8(0)
+		if tmpl.spawnColorFunc != nil {
+			paletteIndex = uint8(tmpl.spawnColorFunc(ctx))
+		}
+
+		lifetimeSeed := uint8(0)
+		if e.tmpl.needsRandBits&lifetimeRandBit != 0 {
+			lifetimeSeed = uint8(fastrand(randBits, randSeq))
 			randSeq++
-			countdown -= uint16(e.r.particleLifetimeStep * float32(x) * 1000)
+		}
+
+		scalingSeed := uint8(0)
+		if e.tmpl.needsRandBits&lifetimeRandBit != 0 {
+			scalingSeed = uint8(fastrand(randBits, randSeq))
+			randSeq++
 		}
 
 		origAngle := uint8(0)
@@ -171,21 +195,21 @@ func (e *Emitter) emit(t float32) {
 		}
 
 		p := particle{
-			countdown: countdown,
-			origAngle: origAngle,
-			origPos: gmath.Vec32{
-				X: float32(pos.X),
-				Y: float32(pos.Y),
-			},
+			counter:      uint16(t * 1000),
+			paletteIndex: paletteIndex,
+			lifetimeSeed: lifetimeSeed,
+			scalingSeed:  scalingSeed,
+			origAngle:    origAngle,
+			origPos:      vec32(particlePos),
 		}
 
-		if e.r.needsRandBits&speedRandBit != 0 {
+		if e.tmpl.needsRandBits&speedRandBit != 0 {
 			x := uint8(fastrand(randBits, randSeq))
 			randSeq++
 			p.speedSeed = x
 		}
 
-		if e.r.needsRandBits&angleRandBit != 0 {
+		if e.tmpl.needsRandBits&angleRandBit != 0 {
 			x := uint8(fastrand(randBits, randSeq))
 			randSeq++
 			p.angleSeed = x

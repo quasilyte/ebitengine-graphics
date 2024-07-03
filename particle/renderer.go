@@ -9,247 +9,86 @@ import (
 	"github.com/quasilyte/gmath"
 )
 
-// randomized stuff:
-// + spawn pos, emission shape (doesn't need a pool)
-// + lifetime randomness 0..1 (doesn't need a pool)
-// randomized stuff that needs a pool of sorts:
-// - speed spread (maybe 256 "steps" are enough?)
-// - direction spread (maybe 256 values plus some offset are enough?)
-// - rotation speed (?)
-// - hue randomization
+// Renderer implements batch particles rendering.
 //
-// need configurators for:
-// - initial angle
-// - angle transformation
-// - scale (+ curve)
-// - color scaling
-// - "explosiveness"
+// It can be used as a layer-like object that renders all
+// of its emitters on a single layer.
 //
-// unsure:
-// - orbit velocity
-// - linear acceleration (or radial, etc.)
-// - damping (slowdown)
-// - radial angle (?)
-
-// Renderer describes a CPU particle emission template.
-// You can create multiple [Emitter] from this template.
+// [Renderer] is intended to be a part of Ebitengine Draw tree.
+// You add [Emitter] to the [Renderer] in order for it to be drawn.
 //
-// Usually, for each emission effect kind you create a separate system.
-// Then you create [Emitter] per object that needs that system.
-// For more complicated cases when high customization of every emitter is required,
-// you might end up with almost 1-to-1 system and emitter ratio.
-// This should not be a problem.
-//
-// This system is not designed to be used for thousands of particles.
-// It's should be good enough for some indie games and can serve as an example
-// CPU particle system implementation.
-//
-// Experimental: particles are part of the experimental API and are subject to change.
-// You're encouraged to give feedback, but it might not be a good idea
-// to use it in your serious long-term project just yet.
+// The order in which particles are drawn is unspecified,
+// but stable: this order is consistent between the frames.
+// If different layers are needed, several renderers should be used.
 type Renderer struct {
-	img *ebiten.Image
+	bucketIDByImage map[*ebiten.Image]int
+	bucketList      []*rendererBucket
+	disposed        bool
+}
 
-	particleMinAngle  gmath.Rad
-	particleMaxAngle  gmath.Rad
-	particleAngleStep gmath.Rad
-
-	particleMinSpeed  float32
-	particleMaxSpeed  float32
-	particleSpeedStep float32
-	particleSpeed     float32
-
-	emitInterval          float32
-	particleMaxLifetime   float32
-	particleMaxLifetimeMS float32
-	particleLifetimeStep  float32
-
-	minEmitBurst       uint8
-	maxEmitBurst       uint8
-	emitBurstRangeSize uint16
-
-	needsRandBits uint8
-
-	template *Template
-
+type rendererBucket struct {
+	img      *ebiten.Image
 	emitters []*Emitter
 }
 
-const (
-	speedRandBit = 1 << iota
-	burstRandBit
-	angleRandBit
-	lifetimeRandBit
-)
-
-func NewRenderer(tmpl *Template) *Renderer {
-	r := &Renderer{template: tmpl}
-
-	r.SetEmitInterval(0.5)
-	r.SetParticleLifetime(3, 3)
-	r.SetParticleSpeed(32.0, 32.0)
-	r.SetEmitBurst(1, 1)
-	r.SetImage(cache.Global.WhitePixel)
-
-	return r
-}
-
-func (r *Renderer) SetImage(img *ebiten.Image) {
-	r.img = img
-}
-
-func (r *Renderer) SetEmitBurst(minAmount, maxAmount int) {
-	amount := gmath.MakeRange(minAmount, maxAmount)
-	if !amount.InBounds(0, math.MaxUint8) {
-		panic("amount is not in [0, 255] bounds")
+func NewRenderer() *Renderer {
+	return &Renderer{
+		bucketIDByImage: make(map[*ebiten.Image]int, 8),
+		bucketList:      make([]*rendererBucket, 0, 8),
 	}
-	if amount.Min != 1 || amount.Max != 1 {
-		r.emitBurstRangeSize = uint16(amount.Max) - uint16(amount.Min) + 1
-		r.needsRandBits |= burstRandBit
+}
+
+func (r *Renderer) IsDisposed() bool {
+	return r.disposed
+}
+
+// Dispose marks the renderer to be removed from the scene.
+// It does not dispose any of its associated emitters.
+// This is mostly relevant if you're using some scene framework.
+func (r *Renderer) Dispose() {
+	r.disposed = true
+}
+
+func (r *Renderer) AddEmitter(e *Emitter) {
+	bucketID, ok := r.bucketIDByImage[e.tmpl.img]
+	var bucket *rendererBucket
+
+	if ok {
+		bucket = r.bucketList[bucketID]
 	} else {
-		r.emitBurstRangeSize = 0
-		r.needsRandBits &^= burstRandBit
-	}
-	r.minEmitBurst = uint8(amount.Min)
-	r.maxEmitBurst = uint8(amount.Max)
-}
-
-func (r *Renderer) SetParticleLifetime(minLifetime, maxLifetime float64) {
-	lifetime := gmath.MakeRange(minLifetime, maxLifetime)
-	if !lifetime.IsValid() {
-		panic("invalid lifetime range")
-	}
-	// A sanity check to avoid unexpected behaviors.
-	if int(maxLifetime*1000) > math.MaxUint16 {
-		panic("specified maxLifetime oveflows the supported lifetime limit of ~65s")
+		bucket = &rendererBucket{
+			img:      e.tmpl.img,
+			emitters: make([]*Emitter, 0, 8),
+		}
+		id := len(r.bucketList)
+		r.bucketList = append(r.bucketList, bucket)
+		r.bucketIDByImage[e.tmpl.img] = id
 	}
 
-	if lifetime.Min != lifetime.Max {
-		r.needsRandBits |= lifetimeRandBit
-	} else {
-		r.needsRandBits &^= lifetimeRandBit
-	}
-
-	r.particleMaxLifetime = float32(lifetime.Max)
-	r.particleMaxLifetimeMS = r.particleMaxLifetime * 1000
-	r.particleLifetimeStep = float32((lifetime.Max - lifetime.Min) / 255)
-
-	// To avoid call-order dependency, update the particle speed
-	// and velocity multiplier when changing the lifetime.
-	r.adjustParticleSpeed(r.particleMinSpeed, r.particleMaxSpeed)
-}
-
-func (r *Renderer) SetParticleDirection(dir, spread gmath.Rad) {
-	angle := gmath.Range[gmath.Rad]{
-		Min: dir - spread*0.5,
-		Max: dir + spread*0.5,
-	}
-
-	r.particleMinAngle = angle.Min
-	r.particleMaxAngle = angle.Max
-
-	if angle.Min != angle.Max {
-		r.particleAngleStep = (angle.Max - angle.Min) / 255
-		r.needsRandBits |= angleRandBit
-	} else {
-		r.particleAngleStep = 0
-		r.needsRandBits &^= angleRandBit
-	}
-}
-
-func (r *Renderer) SetParticleSpeed(minSpeed, maxSpeed float64) {
-	speed := gmath.MakeRange(minSpeed, maxSpeed)
-	if speed.Max < speed.Min {
-		panic("maxSpeed can't be less than speed.Min")
-	}
-	r.adjustParticleSpeed(float32(speed.Min), float32(speed.Max))
-}
-
-func (r *Renderer) adjustParticleSpeed(minSpeed, maxSpeed float32) {
-	r.particleMinSpeed = minSpeed
-	r.particleMaxSpeed = maxSpeed
-	r.particleSpeed = r.particleMaxLifetime * r.particleMinSpeed
-
-	if minSpeed != maxSpeed {
-		r.particleSpeedStep = (maxSpeed - minSpeed) / 255
-		r.needsRandBits |= speedRandBit
-	} else {
-		r.particleSpeedStep = 0
-		r.needsRandBits &^= speedRandBit
-	}
-}
-
-func (r *Renderer) SetEmitInterval(t float64) {
-	r.emitInterval = float32(t)
-}
-
-func (r *Renderer) NewEmitter() *Emitter {
-	e := newParticleEmitter(r)
-	r.emitters = append(r.emitters, e)
-	return e
+	bucket.emitters = append(bucket.emitters, e)
 }
 
 func (r *Renderer) Draw(dst *ebiten.Image) {
 	r.DrawWithOptions(dst, graphics.DrawOptions{})
 }
 
-func (r *Renderer) drawBatch(dst *ebiten.Image, opts graphics.DrawOptions, emitters []*Emitter) {
-	// Use pre-allocated slices.
-	vertices := cache.Global.ScratchVertices[:0]
-	indices := cache.Global.ScratchIndices[:0]
-	defer func() {
-		cache.Global.ScratchVertices = vertices[:0]
-		cache.Global.ScratchIndices = indices[:0]
-	}()
+func (r *Renderer) DrawWithOptions(dst *ebiten.Image, opts graphics.DrawOptions) {
+	liveBuckets := r.bucketList[:0]
 
-	img := r.img
-
-	w, h := float32(img.Bounds().Dx()), float32(img.Bounds().Dy())
-	idx := uint16(0)
-	for _, e := range emitters {
-		for _, p := range e.particles {
-			var pos ebiten.GeoM
-			{
-				origPos := p.origPos
-				progress := float32(p.countdown) / e.r.particleMaxLifetimeMS
-
-				dir := gmath.Vec32{X: 1, Y: 0}
-				if e.r.needsRandBits&angleRandBit != 0 {
-					angle := e.r.particleMinAngle + e.r.particleAngleStep*gmath.Rad(p.angleSeed)
-					angle += gmath.Rad(p.origAngle) * ((2 * math.Pi) / 256)
-					dir = dir.Rotated(angle)
-				}
-
-				// The currentPos might benefit from rounding, but since particle drawing
-				// can be considered to be a hot path, I'm not sure we should do it.
-				// Rounding thousands vectors can add up.
-				speed := e.r.particleSpeed + (e.r.particleSpeedStep * float32(p.speedSeed))
-				currentPos := origPos.Add(dir.Mulf(speed).Mulf(1 - progress))
-
-				pos.Translate(opts.Offset.X, opts.Offset.Y)
-				pos.Translate(float64(currentPos.X), float64(currentPos.Y))
-			}
-
-			x := float32(pos.Element(0, 2))
-			y := float32(pos.Element(1, 2))
-
-			vertices = append(vertices,
-				ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: 1, ColorG: 1, ColorB: 1, ColorA: 1},
-				ebiten.Vertex{DstX: x + w, DstY: y, SrcX: w, SrcY: 0, ColorR: 1, ColorG: 1, ColorB: 1, ColorA: 1},
-				ebiten.Vertex{DstX: x + w, DstY: y + h, SrcX: w, SrcY: h, ColorR: 1, ColorG: 1, ColorB: 1, ColorA: 1},
-				ebiten.Vertex{DstX: x, DstY: y + h, SrcX: 0, SrcY: h, ColorR: 1, ColorG: 1, ColorB: 1, ColorA: 1},
-			)
-
-			indices = append(indices, idx, idx+1, idx+2, idx, idx+2, idx+3)
-			idx += 4
+	for _, bucket := range r.bucketList {
+		activeEmitters := r.drawBucket(dst, bucket.img, opts, bucket.emitters)
+		if len(activeEmitters) == 0 {
+			delete(r.bucketIDByImage, bucket.img)
+			continue
 		}
+		bucket.emitters = activeEmitters
+		liveBuckets = append(liveBuckets, bucket)
 	}
 
-	var drawOptions ebiten.DrawTrianglesOptions
-	dst.DrawTriangles(vertices, indices, img, &drawOptions)
+	r.bucketList = liveBuckets
 }
 
-func (r *Renderer) DrawWithOptions(dst *ebiten.Image, opts graphics.DrawOptions) {
+func (r *Renderer) drawBucket(dst *ebiten.Image, img *ebiten.Image, opts graphics.DrawOptions, emitters []*Emitter) []*Emitter {
 	const batchThreshold = math.MaxUint16 / 24 // Doesn't have to be bigger
 	batchParticles := 0
 
@@ -258,7 +97,14 @@ func (r *Renderer) DrawWithOptions(dst *ebiten.Image, opts graphics.DrawOptions)
 		sharedResources.batchSlice = batch[:0]
 	}()
 
-	for _, e := range r.emitters {
+	activeEmitters := emitters[:0]
+
+	for _, e := range emitters {
+		if e.IsDisposed() {
+			continue
+		}
+		activeEmitters = append(activeEmitters, e)
+
 		if !e.visible {
 			continue
 		}
@@ -266,8 +112,9 @@ func (r *Renderer) DrawWithOptions(dst *ebiten.Image, opts graphics.DrawOptions)
 		if n == 0 {
 			continue
 		}
+
 		if batchParticles+n > batchThreshold {
-			r.drawBatch(dst, opts, batch)
+			r.drawBatch(dst, img, opts, batch)
 			batch = batch[:0]
 			batchParticles = 0
 		} else {
@@ -275,7 +122,113 @@ func (r *Renderer) DrawWithOptions(dst *ebiten.Image, opts graphics.DrawOptions)
 			batchParticles += n
 		}
 	}
+
 	if len(batch) != 0 {
-		r.drawBatch(dst, opts, batch)
+		r.drawBatch(dst, img, opts, batch)
 	}
+
+	return activeEmitters
+}
+
+func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, emitters []*Emitter) {
+	// Use pre-allocated slices.
+	vertices := cache.Global.ScratchVertices[:0]
+	indices := cache.Global.ScratchIndices[:0]
+	defer func() {
+		cache.Global.ScratchVertices = vertices[:0]
+		cache.Global.ScratchIndices = indices[:0]
+	}()
+
+	idx := uint16(0)
+	offset32 := vec32(opts.Offset)
+
+	for _, e := range emitters {
+		tmpl := e.tmpl
+
+		w, h := float32(tmpl.img.Bounds().Dx()), float32(tmpl.img.Bounds().Dy())
+		halfWidth := w * 0.5
+		halfHeight := h * 0.5
+		needScaling := tmpl.needsRandBits&scalingRandBit != 0
+		palette := tmpl.palette
+		needAngle := tmpl.particleMinAngle != 0 || tmpl.particleMaxAngle != 0
+
+		updateColorScaleFunc := tmpl.updateColorScaleFunc
+		updateScalingFunc := tmpl.updateScalingFunc
+
+		ctx := UpdateContext{emitter: e}
+		lifetimeStep := tmpl.particleLifetimeStep
+		maxLifetime := uint16(1000 * tmpl.particleMaxLifetime)
+		minSpeed := tmpl.particleMinSpeed
+		speedStep := tmpl.particleSpeedStep
+		minScaling := tmpl.particleMinScaling
+		scalingStep := tmpl.particleScalingStep
+		for _, p := range e.particles {
+			var pos geom32
+			var angle float64
+			{
+				origPos := p.origPos
+				lifetime := maxLifetime - (uint16(p.lifetimeSeed) * lifetimeStep)
+				fcounter := float32(p.counter)
+				progress := fcounter / float32(lifetime)
+				ctx.t = progress
+
+				dir := gmath.Vec32{X: 1, Y: 0}
+				if needAngle {
+					angle = tmpl.particleMinAngle + tmpl.particleAngleStep*float64(p.angleSeed)
+					angle += float64(p.origAngle) * ((2 * math.Pi) / 255)
+					dir = dir.Rotated(gmath.Rad(angle))
+				}
+
+				speed := minSpeed + (speedStep * float32(p.speedSeed))
+				currentPos := origPos.Add(dir.Mulf(speed).Mulf(fcounter * 0.001))
+
+				scaling := gmath.Vec32{X: 1, Y: 1}
+				if needScaling {
+					scaling = minScaling.Add(scalingStep.Mulf(float32(p.scalingSeed)))
+				}
+				if updateScalingFunc != nil {
+					scaling = scaling.Mul(updateScalingFunc(ctx))
+				}
+
+				pos.Translate(-halfWidth, -halfHeight)
+				if scaling.X != 1 || scaling.Y != 1 {
+					pos.Scale(scaling.X, scaling.Y)
+				}
+				if angle != 0 {
+					pos.Rotate(angle)
+				}
+				pos.Translate(halfWidth, halfHeight)
+				pos.Translate(offset32.X+currentPos.X, offset32.Y+currentPos.Y)
+			}
+
+			clr := palette[p.paletteIndex]
+			if updateColorScaleFunc != nil {
+				clr = clr.Mul(updateColorScaleFunc(ctx))
+			}
+
+			x := pos.tx
+			y := pos.ty
+			if angle == 0 {
+				vertices = append(vertices,
+					ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: x + w, DstY: y, SrcX: w, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: x + w, DstY: y + h, SrcX: w, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: x, DstY: y + h, SrcX: 0, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+				)
+			} else {
+				vertices = append(vertices,
+					ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: (pos.a1+1)*w + x, DstY: pos.c*w + y, SrcX: w, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: pos.b*h + x, DstY: (pos.d1+1)*h + y, SrcX: 0, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: pos.ApplyX(w, h), DstY: pos.ApplyY(w, h), SrcX: w, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+				)
+			}
+
+			indices = append(indices, idx, idx+1, idx+2, idx+1, idx+2, idx+3)
+			idx += 4
+		}
+	}
+
+	var drawOptions ebiten.DrawTrianglesOptions
+	dst.DrawTriangles(vertices, indices, img, &drawOptions)
 }
