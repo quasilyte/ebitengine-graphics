@@ -40,8 +40,7 @@ func (ctx *SpawnContext) Generation() int {
 // randomness may be inferior. It should be good enough
 // for the purposes of generating varying particles.
 func (ctx *SpawnContext) Rand() float64 {
-	v := fastrand(randseed1, uint64(ctx.id))
-	return float64(v) / math.MaxUint64
+	return fastrandFloat(randseed1, uint64(ctx.id))
 }
 
 func (ctx *SpawnContext) RandUint() uint64 {

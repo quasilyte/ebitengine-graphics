@@ -1,5 +1,7 @@
 package particle
 
+import "math"
+
 const (
 	randseed1 = 8979323846
 )
@@ -13,4 +15,18 @@ func fastrand(seed, i uint64) uint64 {
 	x ^= x << 25
 	x ^= x >> 27
 	return x * 2685821657736338717
+}
+
+func fastrandFloat(seed, i uint64) float64 {
+	const (
+		mantissaBits = 52
+		exponentBias = 1023
+	)
+
+	v := fastrand(seed, i)
+	mantissa := v >> (64 - mantissaBits)
+	f := math.Float64frombits((exponentBias-1)<<mantissaBits | mantissa)
+
+	// Make it [0, 1).
+	return (f - 0.5) * 2.0
 }
