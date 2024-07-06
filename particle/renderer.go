@@ -156,8 +156,6 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 		updateScalingFunc := tmpl.updateScalingFunc
 
 		ctx := UpdateContext{emitter: e}
-		lifetimeStep := tmpl.particleLifetimeStep
-		maxLifetime := uint16(1000 * tmpl.particleMaxLifetime)
 		minSpeed := tmpl.particleMinSpeed
 		speedStep := tmpl.particleSpeedStep
 		minScaling := tmpl.particleMinScaling
@@ -167,9 +165,8 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 			var angle float64
 			{
 				origPos := p.origPos
-				lifetime := maxLifetime - (uint16(p.lifetimeSeed) * lifetimeStep)
 				fcounter := float32(p.counter)
-				progress := fcounter / float32(lifetime)
+				progress := fcounter / float32(p.lifetime)
 				ctx.t = progress
 
 				dir := gmath.Vec32{X: 1, Y: 0}

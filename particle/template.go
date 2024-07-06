@@ -71,9 +71,9 @@ type Template struct {
 	particleMaxSpeed  float32
 	particleSpeedStep float32
 
-	emitInterval         float32
-	particleMaxLifetime  float32
-	particleLifetimeStep uint16
+	emitInterval        float32
+	particleMinLifetime float32
+	particleMaxLifetime float32
 
 	minEmitBurst       uint8
 	maxEmitBurst       uint8
@@ -187,8 +187,8 @@ func (tmpl *Template) SetParticleLifetimeRange(minLifetime, maxLifetime float64)
 		tmpl.needsRandBits &^= lifetimeRandBit
 	}
 
+	tmpl.particleMinLifetime = float32(lifetime.Min)
 	tmpl.particleMaxLifetime = float32(lifetime.Max)
-	tmpl.particleLifetimeStep = uint16(1000*(lifetime.Max-lifetime.Min)) / 255
 
 	// To avoid call-order dependency, update the particle speed
 	// and velocity multiplier when changing the lifetime.

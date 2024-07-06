@@ -24,6 +24,8 @@ type Emitter struct {
 	// It helps to avoid the infinitely growing error.
 	dtError float64
 
+	lifetimeMultiplier float32
+
 	// emitDelay is a time (in seconds) until the next emission step.
 	emitDelay float32
 
@@ -36,14 +38,15 @@ type Emitter struct {
 }
 
 type particle struct {
-	counter uint16
+	counter  uint16
+	lifetime uint16
 
 	scalingSeed  uint8
 	speedSeed    uint8
 	angleSeed    uint8
-	lifetimeSeed uint8
 	origAngle    uint8
 	paletteIndex uint8
+	_            [3]uint8 // unused (reserved for future use)
 
 	// Would use {uint16, uint16} here to save 4 bytes,
 	// but it can be desirable to support negative coords
@@ -56,9 +59,10 @@ type particle struct {
 
 func NewEmitter(tmpl *Template) *Emitter {
 	e := &Emitter{
-		tmpl:      tmpl,
-		particles: make([]particle, 0, 8),
-		visible:   true,
+		tmpl:               tmpl,
+		particles:          make([]particle, 0, 8),
+		lifetimeMultiplier: 1,
+		visible:            true,
 	}
 	return e
 }
@@ -72,6 +76,10 @@ func (e *Emitter) Dispose() {
 }
 
 func (e *Emitter) SetVisibility(visible bool) { e.visible = visible }
+
+func (e *Emitter) SetLifetimeMultiplier(multiplier float64) {
+	e.lifetimeMultiplier = float32(multiplier)
+}
 
 func (e *Emitter) SetEmitting(emitting bool) {
 	if e.emitting == emitting {
@@ -121,12 +129,9 @@ func (e *Emitter) UpdateWithDelta(delta float64) {
 
 	live := e.particles[:0]
 	dt := uint16(deltaMS)
-	maxLifetime := uint16(1000 * e.tmpl.particleMaxLifetime)
-	lifetimeStep := e.tmpl.particleLifetimeStep
 	for _, p := range e.particles {
 		p.counter += dt
-		lifetime := maxLifetime - (uint16(p.lifetimeSeed) * lifetimeStep)
-		if p.counter > lifetime {
+		if p.counter > p.lifetime {
 			continue
 		}
 		live = append(live, p)
@@ -177,9 +182,14 @@ func (e *Emitter) emit(t float32) {
 			paletteIndex = uint8(tmpl.spawnColorFunc(ctx))
 		}
 
-		lifetimeSeed := uint8(0)
+		lifetime := uint16(0)
 		if e.tmpl.needsRandBits&lifetimeRandBit != 0 {
-			lifetimeSeed = uint8(fastrand(randBits, randSeq))
+			roll := float32(fastrandFloat(randBits, randSeq))
+			minLifetime := e.tmpl.particleMinLifetime
+			maxLifetime := e.tmpl.particleMaxLifetime
+			v := minLifetime + roll*(maxLifetime-minLifetime)
+			v *= e.lifetimeMultiplier
+			lifetime = uint16(v * 1000)
 			randSeq++
 		}
 
@@ -196,8 +206,8 @@ func (e *Emitter) emit(t float32) {
 
 		p := particle{
 			counter:      uint16(t * 1000),
+			lifetime:     lifetime,
 			paletteIndex: paletteIndex,
-			lifetimeSeed: lifetimeSeed,
 			scalingSeed:  scalingSeed,
 			origAngle:    origAngle,
 			origPos:      vec32(particlePos),
