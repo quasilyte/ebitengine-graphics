@@ -43,22 +43,7 @@ func NewLine(begin, end gmath.Pos) *Line {
 // This is useful when trying to calculate whether this object is contained
 // inside some area or not (like a camera view area).
 func (l *Line) BoundsRect() gmath.Rect {
-	pos1 := l.BeginPos.Resolve()
-	pos2 := l.EndPos.Resolve()
-	x0 := pos1.X
-	x1 := pos2.X
-	y0 := pos1.Y
-	y1 := pos2.Y
-	if x0 > x1 {
-		x0, x1 = x1, x0
-	}
-	if y0 > y1 {
-		y0, y1 = y1, y0
-	}
-	return gmath.Rect{
-		Min: gmath.Vec{X: x0, Y: y0},
-		Max: gmath.Vec{X: x1, Y: y1},
-	}
+	return lineBoundsRect(l.BeginPos, l.EndPos)
 }
 
 // Dispose marks this line for deletion.

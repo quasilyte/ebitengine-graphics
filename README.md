@@ -12,6 +12,7 @@ It works the best in combination with [gscene package](https://github.com/quasil
 Graphical objects list:
 
 * Sprite
+* Texture Line
 * Line
 * Circle (supports dashed style)
 * Rect
