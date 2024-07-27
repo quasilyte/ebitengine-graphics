@@ -209,8 +209,8 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 				vertices = append(vertices,
 					ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
 					ebiten.Vertex{DstX: x + w, DstY: y, SrcX: w, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
-					ebiten.Vertex{DstX: x + w, DstY: y + h, SrcX: w, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
 					ebiten.Vertex{DstX: x, DstY: y + h, SrcX: 0, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: x + w, DstY: y + h, SrcX: w, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
 				)
 			} else {
 				vertices = append(vertices,
