@@ -19,6 +19,7 @@ Graphical objects list:
 * Label
 * Container
 * Canvas
+* Easier shader-based drawing (ShaderObject)
 
 > Missing some graphical object? [Tell us about it](https://github.com/quasilyte/ebitengine-graphics/issues/new).
 
