@@ -30,7 +30,7 @@ type ShaderObject struct {
 	height uint16
 }
 
-func NewShaderGraphics() *ShaderObject {
+func NewShaderObject() *ShaderObject {
 	return &ShaderObject{
 		visible: true,
 	}
