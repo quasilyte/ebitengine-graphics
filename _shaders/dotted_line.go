@@ -11,7 +11,7 @@ var DotSpacing float
 var Color vec4
 
 func Fragment(pos vec4, _ vec2, _ vec4) vec4 {
-	origin := imageSrc0Origin()
+	origin := imageDstOrigin()
 	zpos := quantizeToPixel(pos.xy - origin)
 
 	r := DotRadius
