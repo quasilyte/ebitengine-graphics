@@ -6,6 +6,7 @@ import (
 	"github.com/quasilyte/gmath"
 )
 
+// TODO: separate into Circle and DashedCircle.
 type Circle struct {
 	Pos gmath.Pos
 

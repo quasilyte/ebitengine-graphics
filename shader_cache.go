@@ -13,6 +13,9 @@ var (
 
 	//go:embed _shaders/dashed_circle.go
 	shaderDashedCircleOutline []byte
+
+	//go:embed _shaders/dotted_line.go
+	shaderDottedLine []byte
 )
 
 // CompileShaders prepares shaders bundled with this package.
@@ -21,6 +24,7 @@ var (
 //
 // Objects that require shaders so far:
 // * Circle
+// * DottedLine
 func CompileShaders() {
 	if cache.Global.ShadersCompiled {
 		return
@@ -37,6 +41,7 @@ func CompileShaders() {
 
 	cache.Global.CircleOutlineShader = mustCompileShader(shaderCircleOutline)
 	cache.Global.DashedCircleOutlineShader = mustCompileShader(shaderDashedCircleOutline)
+	cache.Global.DottedLineShader = mustCompileShader(shaderDottedLine)
 }
 
 func requireShaders() {

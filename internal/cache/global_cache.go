@@ -34,6 +34,7 @@ type cache struct {
 	ShadersCompiled           bool
 	CircleOutlineShader       *ebiten.Shader
 	DashedCircleOutlineShader *ebiten.Shader
+	DottedLineShader          *ebiten.Shader
 
 	Rand            gmath.Rand
 	WhitePixel      *ebiten.Image
