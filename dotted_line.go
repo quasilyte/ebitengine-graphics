@@ -141,14 +141,10 @@ func (l *DottedLine) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	bounds := l.BoundsRect()
 	width := bounds.Width()
 	height := bounds.Height()
-	pos := bounds.Min
+	pos := bounds.Min.Add(opts.Offset)
 
-	l.beginVec = l.BeginPos.Resolve().AsVec32()
-	l.endVec = l.EndPos.Resolve().AsVec32()
-
-	// if l.beginVec.Y > l.endVec.Y {
-	// 	l.beginVec.Y, l.endVec.Y = l.endVec.Y, l.beginVec.Y
-	// }
+	l.beginVec = l.BeginPos.Resolve().Add(opts.Offset).AsVec32()
+	l.endVec = l.EndPos.Resolve().Add(opts.Offset).AsVec32()
 
 	var drawOptions ebiten.DrawRectShaderOptions
 	drawOptions.Uniforms = l.shaderData
