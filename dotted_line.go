@@ -29,7 +29,7 @@ type DottedLine struct {
 // * Visible=true
 // * The ColorScale is {1, 1, 1, 1}
 // * DotRadius=1
-// * DotSpacing=1
+// * DotSpacing=3
 func NewDottedLine(begin, end gmath.Pos) *DottedLine {
 	requireShaders()
 
@@ -42,7 +42,7 @@ func NewDottedLine(begin, end gmath.Pos) *DottedLine {
 
 	l.shaderData = map[string]any{
 		"DotRadius":  float32(1),
-		"DotSpacing": float32(1),
+		"DotSpacing": float32(3),
 		"Color":      l.colorScale.AsVec4(),
 		"PointA":     l.beginVec.AsSlice(),
 		"PointB":     l.endVec.AsSlice(),
@@ -108,13 +108,13 @@ func (l *DottedLine) SetDotSpacing(spacing float64) {
 // GetColorScale is used to retrieve the current color scale value of the line.
 // Use SetColorScale to change it.
 func (l *DottedLine) GetColorScale() ColorScale {
-	return l.colorScale
+	return l.colorScale.undoPremultiply()
 }
 
 // SetColorScale assigns a new ColorScale to this line.
 // Use GetColorScale to retrieve the current color scale.
 func (l *DottedLine) SetColorScale(cs ColorScale) {
-	l.colorScale = cs
+	l.colorScale = cs.premultiplyAlpha()
 }
 
 // GetAlpha is a shorthand for GetColorScale().A expression.
