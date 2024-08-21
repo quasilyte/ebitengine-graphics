@@ -162,8 +162,8 @@ func (tmpl *Template) SetParticleScalingRange(minScaling, maxScaling gmath.Vec) 
 		tmpl.needsRandBits &^= scalingRandBit
 	}
 
-	tmpl.particleMinScaling = vec32(minScaling)
-	tmpl.particleMaxScaling = vec32(maxScaling)
+	tmpl.particleMinScaling = minScaling.AsVec32()
+	tmpl.particleMaxScaling = maxScaling.AsVec32()
 	tmpl.particleScalingStep = tmpl.particleMaxScaling.Sub(tmpl.particleMinScaling).Divf(255)
 }
 

@@ -140,7 +140,7 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 	}()
 
 	idx := uint16(0)
-	offset32 := vec32(opts.Offset)
+	offset32 := opts.Offset.AsVec32()
 
 	for _, e := range emitters {
 		tmpl := e.tmpl

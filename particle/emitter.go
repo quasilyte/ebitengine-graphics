@@ -210,7 +210,7 @@ func (e *Emitter) emit(t float32) {
 			paletteIndex: paletteIndex,
 			scalingSeed:  scalingSeed,
 			origAngle:    origAngle,
-			origPos:      vec32(particlePos),
+			origPos:      particlePos.AsVec32(),
 		}
 
 		if e.tmpl.needsRandBits&speedRandBit != 0 {
