@@ -56,12 +56,12 @@ func NewDottedLine(begin, end gmath.Pos) *DottedLine {
 // This is useful when trying to calculate whether this object is contained
 // inside some area or not (like a camera view area).
 func (l *DottedLine) BoundsRect() gmath.Rect {
-	r := l.GetDotRadius()
+	rr := l.GetDotRadius() + 1
 	bounds := lineBoundsRect(l.BeginPos, l.EndPos)
-	bounds.Min.X -= r
-	bounds.Min.Y -= r
-	bounds.Max.X += r
-	bounds.Max.Y += r
+	bounds.Min.X -= rr
+	bounds.Min.Y -= rr
+	bounds.Max.X += rr
+	bounds.Max.Y += rr
 	return bounds
 }
 

@@ -29,7 +29,7 @@ func Fragment(pos vec4, _ vec2, _ vec4) vec4 {
 	dotCenter = quantizeToPixel(dotCenter)
 
 	distanceToDot := distance(zpos, dotCenter)
-	if distanceToDot < r {
+	if distanceToDot <= r {
 		return Color
 	}
 	return vec4(0)
