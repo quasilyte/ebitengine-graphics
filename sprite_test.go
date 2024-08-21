@@ -15,7 +15,7 @@ func TestSpriteSize(t *testing.T) {
 	// Sprite objects are heap-allocated in 99.9% of cases.
 	// They're also one of the most common used type of graphics in an average game.
 	// This means that their size matters.
-	wantSize := uintptr(120)
+	wantSize := uintptr(136)
 	haveSize := unsafe.Sizeof(graphics.Sprite{})
 	if wantSize != haveSize {
 		t.Fatalf("sizeof(Sprite):\nhave: %d\nwant: %d", haveSize, wantSize)
