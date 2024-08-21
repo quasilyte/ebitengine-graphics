@@ -10,7 +10,7 @@ import (
 // It's pretty barebones, you might want to wrap it into
 // your game's camera type and add functionality like lerping between A and B.
 // Add [Camera] itself into the [SceneDrawer] and put it inside your
-// own camera implementation. Then call appropriate things like [SetPos]
+// own camera implementation. Then call appropriate things like [SetOffset]
 // and [Pan] on the wrapped camera to implement something fancier.
 //
 // Some terminology:
@@ -22,8 +22,8 @@ import (
 // if the camera's offset is {32, 32}, then screen coordinate is {0, 0}.
 //
 // Converting coordinates:
-// * screen to world: screenPos.Add(camera.GetPos())
-// * world to screen: worldPos.Sub(camera.GetPos())
+// * screen to world: screenPos.Add(camera.GetOffset())
+// * world to screen: worldPos.Sub(camera.GetOffset())
 //
 // Pay attention to the docs, they should tell you which kind of a position
 // is expected for an argument and/or method's return value.
@@ -56,6 +56,10 @@ func NewCamera() *Camera {
 		Max: gmath.Vec{X: float64(w), Y: float64(h)},
 	})
 	return camera
+}
+
+func (c *Camera) GetBounds() gmath.Rect {
+	return c.bounds
 }
 
 // SetBounds sets the camera panning limits.
@@ -103,48 +107,48 @@ func (c *Camera) SetLayerMask(mask uint64) {
 	c.layerMask = mask
 }
 
-// GetCenterPos returns the camera current offset translated
+// GetCenterOffset returns the camera current offset translated
 // to the viewport rect's center.
-// To get the untranslated position, use [GetPos].
+// To get the untranslated position, use [GetOffset].
 //
 // The returned pos is in world coordinates.
-func (c *Camera) GetCenterPos() gmath.Vec {
+func (c *Camera) GetCenterOffset() gmath.Vec {
 	return c.offset.Add(c.areaSize.Mulf(0.5)).Rounded()
 }
 
-// SetCenterPos centers the camera around given position.
+// SetCenterOffset centers the camera around given position.
 // After the clamping rules apply, the pos may end up not being in the perfect
 // center of the camera's viewport rect.
 //
 // The return value reports whether the position was actually updated.
 //
 // The pos parameter should be in world coordinates.
-func (c *Camera) SetCenterPos(pos gmath.Vec) bool {
+func (c *Camera) SetCenterOffset(pos gmath.Vec) bool {
 	return c.setOffset(pos.Sub(c.areaSize.Mulf(0.5)))
 }
 
-// GetPos returns the camera current offset.
+// GetOffset returns the camera current offset.
 // The pos is given for the top-left corner of the camera's viewport rect.
-// To get the center position, use [GetCenterPos].
+// To get the center position, use [GetCenterOffset].
 //
 // The returned pos is in world coordinates.
-func (c *Camera) GetPos() gmath.Vec {
+func (c *Camera) GetOffset() gmath.Vec {
 	return c.offset
 }
 
-// SetPos assigns a new offset to the camera.
+// SetOffset assigns a new offset to the camera.
 // It will be clamped to fit the camera bounds.
 //
 // The return value reports whether the position was actually updated.
 //
 // The pos parameter should be in world coordinates.
-func (c *Camera) SetPos(pos gmath.Vec) bool {
+func (c *Camera) SetOffset(pos gmath.Vec) bool {
 	return c.setOffset(pos)
 }
 
 // Pan adds the specified camera position delta to the camera's current offset.
-// It's a shorthand to c.SetPos(c.GetPos().Add(delta)).
-// The same clamping rules apply as in [SetPos].
+// It's a shorthand to c.SetOffset(c.GetOffset().Add(delta)).
+// The same clamping rules apply as in [SetOffset].
 //
 // The return value reports whether the position was actually updated.
 func (c *Camera) Pan(delta gmath.Vec) bool {
