@@ -36,6 +36,8 @@ type Sprite struct {
 	// some other object rotation, hence the pointer.
 	Rotation *gmath.Rad
 
+	PivotOffset gmath.Vec
+
 	// Shader is an shader that will be used during rendering of the image.
 	// Use NewShader to initialize this field.
 	//
@@ -88,7 +90,7 @@ func NewSprite() *Sprite {
 // The bounding rectangle can't be used for collisions since it treats
 // the frame size as an object size.
 func (s *Sprite) BoundsRect() gmath.Rect {
-	pos := s.Pos.Resolve()
+	pos := s.calculatePos()
 	if s.IsCentered() {
 		offset := gmath.Vec{X: float64(s.frameWidth / 2), Y: float64(s.frameHeight / 2)}
 		return gmath.Rect{
@@ -392,7 +394,7 @@ func (s *Sprite) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 		drawOptions.GeoM.Scale(s.scaleX, s.scaleY)
 	}
 
-	pos := opts.Offset.Add(s.Pos.Resolve())
+	pos := s.calculatePos().Add(opts.Offset)
 	drawOptions.GeoM.Translate(pos.X, pos.Y)
 
 	// Making a sub-image can be more expensive than we would like it
@@ -427,6 +429,18 @@ func (s *Sprite) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	options.Images[3] = s.Shader.Texture3
 	options.Uniforms = s.Shader.shaderData
 	dst.DrawRectShader(srcImageBounds.Dx(), srcImageBounds.Dy(), s.Shader.compiled, &options)
+}
+
+func (s *Sprite) calculatePos() gmath.Vec {
+	pos := s.Pos.Resolve()
+	if !s.PivotOffset.IsZero() {
+		offset := s.PivotOffset
+		if s.Rotation != nil {
+			offset = offset.Rotated(*s.Rotation)
+		}
+		pos = pos.Add(offset)
+	}
+	return pos
 }
 
 func (s *Sprite) updateSubImage() {
