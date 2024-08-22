@@ -148,9 +148,14 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 		w, h := float32(tmpl.img.Bounds().Dx()), float32(tmpl.img.Bounds().Dy())
 		halfWidth := w * 0.5
 		halfHeight := h * 0.5
-		needScaling := tmpl.needsRandBits&scalingRandBit != 0
 		palette := tmpl.palette
-		needAngle := tmpl.particleMinAngle != 0 || tmpl.particleMaxAngle != 0
+
+		needScaling := tmpl.needsRandBits&scalingRandBit != 0 ||
+			tmpl.particleMinScaling.X != 1 ||
+			tmpl.particleMinScaling.Y != 1
+		needAngle := tmpl.particleMinAngle != 0 ||
+			tmpl.particleMaxAngle != 0 ||
+			e.Rotation != nil
 
 		updateColorScaleFunc := tmpl.updateColorScaleFunc
 		updateScalingFunc := tmpl.updateScalingFunc
