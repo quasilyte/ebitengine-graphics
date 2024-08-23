@@ -1,6 +1,7 @@
 package graphics
 
 import (
+	"fmt"
 	"image/color"
 	"unsafe"
 
@@ -27,6 +28,14 @@ var (
 	defaultColorScale = ColorScale{1, 1, 1, 1}
 	transparentColor  = ColorScale{0, 0, 0, 0}
 )
+
+func FormatRGB(clr color.NRGBA) string {
+	return fmt.Sprintf("%02x%02x%02x", clr.R, clr.G, clr.B)
+}
+
+func FormatRGBA(clr color.NRGBA) string {
+	return fmt.Sprintf("%02x%02x%02x%02x", clr.R, clr.G, clr.B, clr.A)
+}
 
 // RGB returns a ColorScale created from the bits of rgb value.
 // RGB(0xAABBCC) is identical to R=0xAA, G=0xBB, B=0xCC, A=0xFF.
@@ -66,6 +75,10 @@ func ColorScaleFromColor(c color.NRGBA) ColorScale {
 	var cs ColorScale
 	cs.SetColor(c)
 	return cs
+}
+
+func (c ColorScale) String() string {
+	return FormatRGBA(c.Color())
 }
 
 // SetColor assigns the color.NRGBA equivalent to a color scale.
