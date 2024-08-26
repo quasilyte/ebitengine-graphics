@@ -46,11 +46,12 @@ type particle struct {
 	angleSeed    uint8
 	origAngle    uint8
 	paletteIndex uint8
-	_            [3]uint8 // unused (reserved for future use)
+	userData     uint8
+	_            [2]uint8 // unused (reserved for future use)
 
 	// Would use {uint16, uint16} here to save 4 bytes,
 	// but it can be desirable to support negative coords
-	// and values larget than MaxUint16.
+	// and values larger than MaxUint16.
 	// The 32-bit float will grant us a precision area of about
 	// 8_388_608 pixels (as opposed to 65_536 of uint16).
 	// A world larger than that would make particles less accurate.
@@ -172,6 +173,10 @@ func (e *Emitter) emit(t float32) {
 		ctx.id = e.idSeq
 		e.idSeq++
 		particlePos := pos
+		ctx.userData = 0
+		if tmpl.spawnUserDataFunc != nil {
+			ctx.userData = tmpl.spawnUserDataFunc(ctx)
+		}
 		if tmpl.spawnOffsetFunc != nil {
 			offset := rotatedVec(tmpl.spawnOffsetFunc(ctx), e.Rotation)
 			particlePos = particlePos.Add(offset)
@@ -210,6 +215,7 @@ func (e *Emitter) emit(t float32) {
 			paletteIndex: paletteIndex,
 			scalingSeed:  scalingSeed,
 			origAngle:    origAngle,
+			userData:     ctx.userData,
 			origPos:      particlePos.AsVec32(),
 		}
 

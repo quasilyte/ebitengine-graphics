@@ -22,8 +22,13 @@ var defaultPalette = []graphics.ColorScale{
 }
 
 type SpawnContext struct {
-	id      uint32
-	emitter *Emitter
+	id       uint32
+	userData uint8
+	emitter  *Emitter
+}
+
+func (ctx *SpawnContext) ParticleUserData() uint8 {
+	return ctx.userData
 }
 
 func (ctx *SpawnContext) ParticleID() int {
@@ -48,8 +53,13 @@ func (ctx *SpawnContext) RandUint() uint64 {
 }
 
 type UpdateContext struct {
-	emitter *Emitter
-	t       float32
+	emitter  *Emitter
+	t        float32
+	userData uint8
+}
+
+func (ctx *UpdateContext) ParticleUserData() uint8 {
+	return ctx.userData
 }
 
 func (ctx *UpdateContext) Time() float32 {
@@ -83,8 +93,9 @@ type Template struct {
 
 	palette []graphics.ColorScale
 
-	spawnOffsetFunc func(ctx SpawnContext) gmath.Vec
-	spawnColorFunc  func(ctx SpawnContext) uint
+	spawnUserDataFunc func(ctx SpawnContext) uint8
+	spawnOffsetFunc   func(ctx SpawnContext) gmath.Vec
+	spawnColorFunc    func(ctx SpawnContext) uint
 
 	updateColorScaleFunc func(ctx UpdateContext) graphics.ColorScale
 	updateScalingFunc    func(ctx UpdateContext) gmath.Vec32
@@ -107,6 +118,10 @@ func NewTemplate() *Template {
 
 func (tmpl *Template) SetPalette(colors []graphics.ColorScale) {
 	tmpl.palette = colors
+}
+
+func (tmpl *Template) SetSpawnUserDataFunc(fn func(ctx SpawnContext) uint8) {
+	tmpl.spawnUserDataFunc = fn
 }
 
 func (tmpl *Template) SetSpawnOffsetFunc(fn func(ctx SpawnContext) gmath.Vec) {

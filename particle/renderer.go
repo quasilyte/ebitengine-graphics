@@ -173,6 +173,7 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 				fcounter := float32(p.counter)
 				progress := fcounter / float32(p.lifetime)
 				ctx.t = progress
+				ctx.userData = p.userData
 
 				dir := gmath.Vec32{X: 1, Y: 0}
 				if needAngle {
