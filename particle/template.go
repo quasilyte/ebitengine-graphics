@@ -116,6 +116,15 @@ func NewTemplate() *Template {
 	return tmpl
 }
 
+func (tmpl *Template) Clone() *Template {
+	cloned := *tmpl
+	if len(tmpl.palette) != 0 {
+		cloned.palette = make([]graphics.ColorScale, len(tmpl.palette))
+		copy(cloned.palette, tmpl.palette)
+	}
+	return &cloned
+}
+
 func (tmpl *Template) SetPalette(colors []graphics.ColorScale) {
 	tmpl.palette = colors
 }
