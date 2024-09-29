@@ -75,7 +75,7 @@ const (
 func NewSprite() *Sprite {
 	return &Sprite{
 		colorScale:       defaultColorScale,
-		ebitenColorScale: defaultColorScale.toEbitenColorScale(),
+		ebitenColorScale: defaultColorScale.ToEbitenColorScale(),
 		scaleX:           1,
 		scaleY:           1,
 		flags:            spriteFlagVisible | spriteFlagCentered,
@@ -199,7 +199,7 @@ func (s *Sprite) SetColorScale(cs ColorScale) {
 		return
 	}
 	s.colorScale = cs
-	s.ebitenColorScale = s.colorScale.toEbitenColorScale()
+	s.ebitenColorScale = s.colorScale.ToEbitenColorScale()
 }
 
 // GetAlpha is a shorthand for GetColorScale().A expression.
@@ -212,7 +212,7 @@ func (s *Sprite) SetAlpha(a float32) {
 		return
 	}
 	s.colorScale.A = a
-	s.ebitenColorScale = s.colorScale.toEbitenColorScale()
+	s.ebitenColorScale = s.colorScale.ToEbitenColorScale()
 }
 
 // Dispose marks this sprite for deletion.

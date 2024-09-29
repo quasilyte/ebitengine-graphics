@@ -198,7 +198,7 @@ func (rect *Rect) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 			drawOptions.Blend = *opts.Blend
 		}
 		drawOptions.GeoM = rect.calculateGeom(rect.width, rect.height, finalOffset)
-		drawOptions.ColorScale = rect.fillColorScale.toEbitenColorScale()
+		drawOptions.ColorScale = rect.fillColorScale.ToEbitenColorScale()
 		dst.DrawImage(whitePixel, &drawOptions)
 		return
 	}
@@ -217,7 +217,7 @@ func (rect *Rect) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	}
 	drawOptions.GeoM.Scale(rect.width-rect.outlineWidth*2, rect.height-rect.outlineWidth*2)
 	drawOptions.GeoM.Translate(rect.outlineWidth+finalOffset.X, rect.outlineWidth+finalOffset.Y)
-	drawOptions.ColorScale = rect.fillColorScale.toEbitenColorScale()
+	drawOptions.ColorScale = rect.fillColorScale.ToEbitenColorScale()
 	dst.DrawImage(whitePixel, &drawOptions)
 }
 

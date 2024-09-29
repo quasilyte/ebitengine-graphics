@@ -36,7 +36,7 @@ func NewTextureLine(begin, end gmath.Pos) *TextureLine {
 		BeginPos:         begin,
 		EndPos:           end,
 		colorScale:       defaultColorScale,
-		ebitenColorScale: defaultColorScale.toEbitenColorScale(),
+		ebitenColorScale: defaultColorScale.ToEbitenColorScale(),
 		visible:          true,
 	}
 }
@@ -86,7 +86,7 @@ func (l *TextureLine) SetColorScale(cs ColorScale) {
 		return
 	}
 	l.colorScale = cs
-	l.ebitenColorScale = l.colorScale.toEbitenColorScale()
+	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
 }
 
 // GetAlpha is a shorthand for GetColorScale().A expression.
@@ -99,7 +99,7 @@ func (l *TextureLine) SetAlpha(a float32) {
 		return
 	}
 	l.colorScale.A = a
-	l.ebitenColorScale = l.colorScale.toEbitenColorScale()
+	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
 }
 
 // Draw renders the texture line onto the provided dst image.

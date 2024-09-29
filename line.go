@@ -32,7 +32,7 @@ func NewLine(begin, end gmath.Pos) *Line {
 		BeginPos:         begin,
 		EndPos:           end,
 		colorScale:       defaultColorScale,
-		ebitenColorScale: defaultColorScale.toEbitenColorScale(),
+		ebitenColorScale: defaultColorScale.ToEbitenColorScale(),
 		width:            1,
 		visible:          true,
 	}
@@ -95,7 +95,7 @@ func (l *Line) SetColorScale(cs ColorScale) {
 		return
 	}
 	l.colorScale = cs
-	l.ebitenColorScale = l.colorScale.toEbitenColorScale()
+	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
 }
 
 // GetAlpha is a shorthand for GetColorScale().A expression.
@@ -108,7 +108,7 @@ func (l *Line) SetAlpha(a float32) {
 		return
 	}
 	l.colorScale.A = a
-	l.ebitenColorScale = l.colorScale.toEbitenColorScale()
+	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
 }
 
 // Draw renders the line onto the provided dst image.

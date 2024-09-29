@@ -185,7 +185,7 @@ func (c *ColorScale) premultiplyAlpha() ColorScale {
 	}
 }
 
-func (c *ColorScale) toEbitenColorScale() ebiten.ColorScale {
+func (c *ColorScale) ToEbitenColorScale() ebiten.ColorScale {
 	// This basically turns a NRGBA-style color scale into
 	// RGBA-style color scale (alpha-premultiplied).
 	var ec ebiten.ColorScale

@@ -123,7 +123,7 @@ func (l *Label) SetShadow(cs ColorScale) {
 	if l.shadow == disabledShadow {
 		l.shadow = &labelShadowData{enabled: true}
 	}
-	l.shadow.ebitenColorScale = cs.toEbitenColorScale()
+	l.shadow.ebitenColorScale = cs.ToEbitenColorScale()
 }
 
 // GetColorScale is used to retrieve the current color scale value of the label's text.
@@ -139,7 +139,7 @@ func (l *Label) SetColorScale(cs ColorScale) {
 		return
 	}
 	l.colorScale = cs
-	l.ebitenColorScale = l.colorScale.toEbitenColorScale()
+	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
 }
 
 // GetAlpha is a shorthand for GetColorScale().A expression.
@@ -152,7 +152,7 @@ func (l *Label) SetAlpha(a float32) {
 		return
 	}
 	l.colorScale.A = a
-	l.ebitenColorScale = l.colorScale.toEbitenColorScale()
+	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
 }
 
 func (l *Label) Dispose() {
