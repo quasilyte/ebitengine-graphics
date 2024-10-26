@@ -23,11 +23,13 @@ import (
 type Renderer struct {
 	bucketIDByImage map[*ebiten.Image]int
 	bucketList      []*rendererBucket
+	freeList        []*rendererBucket
 	disposed        bool
 }
 
 type rendererBucket struct {
 	img      *ebiten.Image
+	id       int
 	emitters []*Emitter
 }
 
@@ -35,6 +37,7 @@ func NewRenderer() *Renderer {
 	return &Renderer{
 		bucketIDByImage: make(map[*ebiten.Image]int, 8),
 		bucketList:      make([]*rendererBucket, 0, 8),
+		freeList:        make([]*rendererBucket, 0, 2),
 	}
 }
 
@@ -54,14 +57,26 @@ func (r *Renderer) AddEmitter(e *Emitter) {
 	var bucket *rendererBucket
 
 	if ok {
+		// Found an active bucket match.
 		bucket = r.bucketList[bucketID]
 	} else {
-		bucket = &rendererBucket{
-			img:      e.tmpl.img,
-			emitters: make([]*Emitter, 0, 8),
+		var id int
+		if len(r.freeList) > 0 {
+			// Re-use a previously retired bucket.
+			bucket = r.freeList[len(r.freeList)-1]
+			r.freeList = r.freeList[:len(r.freeList)-1]
+			id = bucket.id
+			bucket.img = e.tmpl.img
+		} else {
+			// Allocate a new bucket.
+			id = len(r.bucketList)
+			bucket = &rendererBucket{
+				id:       id,
+				img:      e.tmpl.img,
+				emitters: make([]*Emitter, 0, 8),
+			}
+			r.bucketList = append(r.bucketList, bucket)
 		}
-		id := len(r.bucketList)
-		r.bucketList = append(r.bucketList, bucket)
 		r.bucketIDByImage[e.tmpl.img] = id
 	}
 
@@ -73,19 +88,20 @@ func (r *Renderer) Draw(dst *ebiten.Image) {
 }
 
 func (r *Renderer) DrawWithOptions(dst *ebiten.Image, opts graphics.DrawOptions) {
-	liveBuckets := r.bucketList[:0]
-
 	for _, bucket := range r.bucketList {
+		if bucket.img == nil {
+			continue // This bucket was retired, it's in the free list
+		}
 		activeEmitters := r.drawBucket(dst, bucket.img, opts, bucket.emitters)
 		if len(activeEmitters) == 0 {
 			delete(r.bucketIDByImage, bucket.img)
+			bucket.emitters = bucket.emitters[:0]
+			bucket.img = nil
+			r.freeList = append(r.freeList, bucket)
 			continue
 		}
 		bucket.emitters = activeEmitters
-		liveBuckets = append(liveBuckets, bucket)
 	}
-
-	r.bucketList = liveBuckets
 }
 
 func (r *Renderer) drawBucket(dst *ebiten.Image, img *ebiten.Image, opts graphics.DrawOptions, emitters []*Emitter) []*Emitter {
