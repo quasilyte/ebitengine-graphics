@@ -5,8 +5,8 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/quasilyte/gmath"
-	"golang.org/x/image/font"
 )
 
 var Global = &cache{}
@@ -29,7 +29,7 @@ func init() {
 // graphical elements.
 type cache struct {
 	FontInfoList []FontInfo
-	FontInfoMap  map[font.Face]uint16
+	FontInfoMap  map[text.Face]uint16
 
 	ShadersCompiled           bool
 	CircleOutlineShader       *ebiten.Shader
@@ -43,14 +43,14 @@ type cache struct {
 }
 
 type FontInfo struct {
-	Face       font.Face
+	Face       text.Face
 	CapHeight  float64
 	LineHeight float64
 }
 
-func (c *cache) InternFontFace(ff font.Face) uint16 {
+func (c *cache) InternFontFace(ff text.Face) uint16 {
 	if c.FontInfoMap == nil {
-		c.FontInfoMap = make(map[font.Face]uint16, 8)
+		c.FontInfoMap = make(map[text.Face]uint16, 8)
 	}
 
 	if id, ok := c.FontInfoMap[ff]; ok {
@@ -61,8 +61,8 @@ func (c *cache) InternFontFace(ff font.Face) uint16 {
 	c.FontInfoMap[ff] = id
 
 	m := ff.Metrics()
-	capHeight := math.Abs(float64(m.CapHeight.Floor()))
-	lineHeight := float64(m.Height.Floor())
+	capHeight := math.Abs(m.CapHeight)
+	lineHeight := m.HLineGap
 	c.FontInfoList = append(c.FontInfoList, FontInfo{
 		Face:       ff,
 		CapHeight:  capHeight,
