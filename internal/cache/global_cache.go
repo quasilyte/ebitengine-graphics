@@ -62,7 +62,12 @@ func (c *cache) InternFontFace(ff text.Face) uint16 {
 
 	m := ff.Metrics()
 	capHeight := math.Abs(m.CapHeight)
-	lineHeight := m.HLineGap
+
+	// > HLineGap = fixed26_6ToFloat64(fm.Height - fm.Ascent - fm.Descent)
+	// > HAscent:   fixed26_6ToFloat64(fm.Ascent)
+	// > HDescent:  fixed26_6ToFloat64(fm.Descent)
+	lineHeight := m.HLineGap + m.HAscent + m.HDescent
+
 	c.FontInfoList = append(c.FontInfoList, FontInfo{
 		Face:       ff,
 		CapHeight:  capHeight,

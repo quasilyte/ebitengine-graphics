@@ -282,6 +282,7 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 	}
 	drawOptions.ColorScale = clr
 	drawOptions.Filter = ebiten.FilterLinear
+	drawOptions.LayoutOptions.LineSpacing = fontInfo.LineHeight
 
 	if l.GetAlignHorizontal() == AlignHorizontalLeft {
 		drawOptions.GeoM.Translate(math.Round(pos.X), math.Round(pos.Y))
@@ -289,6 +290,8 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 		text.Draw(dst, l.text, fontInfo.Face, &drawOptions)
 		return
 	}
+
+	// TODO: use ebitengine new layout options for alignment?
 
 	textRemaining := l.text
 	offsetY := 0.0
