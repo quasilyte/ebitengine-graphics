@@ -5,10 +5,9 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text" //nolint can't use v2/ text right now
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/quasilyte/ebitengine-graphics/internal/cache"
 	"github.com/quasilyte/gmath"
-	"golang.org/x/image/font"
 )
 
 type AlignVertical uint8
@@ -99,7 +98,7 @@ const (
 	labelFlagDisposed
 )
 
-func NewLabel(ff font.Face) *Label {
+func NewLabel(ff text.Face) *Label {
 	fontID := cache.Global.InternFontFace(ff)
 	return &Label{
 		fontID: fontID,
@@ -224,9 +223,9 @@ func (l *Label) SetText(s string) {
 
 	fontInfo := cache.Global.FontInfoList[l.fontID]
 
-	bounds := text.BoundString(fontInfo.Face, l.text) //nolint (font.BoundString is different)
-	l.boundsWidth = uint16(bounds.Dx())
-	l.boundsHeight = uint16(bounds.Dy())
+	w, h := text.Measure(l.text, fontInfo.Face, fontInfo.LineHeight)
+	l.boundsWidth = uint16(w)
+	l.boundsHeight = uint16(h)
 
 	if l.shadow.enabled {
 		l.boundsHeight++
@@ -277,7 +276,7 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 	fontInfo := cache.Global.FontInfoList[l.fontID]
 	containerRect := rect
 
-	var drawOptions ebiten.DrawImageOptions
+	var drawOptions text.DrawOptions
 	if blend != nil {
 		drawOptions.Blend = *blend
 	}
@@ -287,7 +286,7 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 	if l.GetAlignHorizontal() == AlignHorizontalLeft {
 		drawOptions.GeoM.Translate(math.Round(pos.X), math.Round(pos.Y))
 		drawOptions.GeoM.Translate(offset.X, offset.Y)
-		text.DrawWithOptions(dst, l.text, fontInfo.Face, &drawOptions)
+		text.Draw(dst, l.text, fontInfo.Face, &drawOptions)
 		return
 	}
 
@@ -300,8 +299,8 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 			lineText = textRemaining[:nextLine]
 			textRemaining = textRemaining[nextLine+len("\n"):]
 		}
-		lineBounds := text.BoundString(fontInfo.Face, lineText) //nolint (font.BoundString is different)
-		lineBoundsWidth := float64(lineBounds.Dx())
+
+		_, lineBoundsWidth := text.Measure(lineText, fontInfo.Face, fontInfo.LineHeight)
 		offsetX := 0.0
 		switch l.GetAlignHorizontal() {
 		case AlignHorizontalCenter:
@@ -312,7 +311,7 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 		drawOptions.GeoM.Reset()
 		drawOptions.GeoM.Translate(math.Round(pos.X+offsetX), math.Round(pos.Y+offsetY))
 		drawOptions.GeoM.Translate(offset.X, offset.Y)
-		text.DrawWithOptions(dst, lineText, fontInfo.Face, &drawOptions)
+		text.Draw(dst, lineText, fontInfo.Face, &drawOptions)
 		if nextLine == -1 {
 			break
 		}

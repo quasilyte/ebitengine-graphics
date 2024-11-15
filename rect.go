@@ -303,7 +303,7 @@ func (rect *Rect) drawOutline(dst *ebiten.Image, blend *ebiten.Blend, offset gma
 	}
 
 	options := ebiten.DrawTrianglesOptions{
-		FillRule: ebiten.EvenOdd,
+		FillRule: ebiten.FillRuleEvenOdd,
 	}
 	if blend != nil {
 		options.Blend = *blend
