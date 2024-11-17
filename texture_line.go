@@ -1,11 +1,11 @@
 package graphics
 
 import (
-	"fmt"
-	"image"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/quasilyte/ebitengine-graphics/internal/cache"
+	"github.com/quasilyte/ebitengine-graphics/internal/xmath"
 	"github.com/quasilyte/gmath"
 )
 
@@ -13,36 +13,38 @@ type TextureLine struct {
 	BeginPos gmath.Pos
 	EndPos   gmath.Pos
 
-	// Shader is an shader that will be used during rendering of the texture.
+	// Shader is an shader that will be used during rendering of the line.
 	// Use NewShader to initialize this field.
 	//
 	// If nil, no shaders will be used.
 	Shader *Shader
 
-	colorScale       ColorScale
-	ebitenColorScale ebiten.ColorScale
+	colorScale ColorScale
 
-	texture         *ebiten.Image
-	textureSubImage *ebiten.Image
-
-	prevLength int
+	texture    *ebiten.Image
+	texturePad float64
 
 	visible  bool
 	disposed bool
 }
 
 func NewTextureLine(begin, end gmath.Pos) *TextureLine {
-	return &TextureLine{
-		BeginPos:         begin,
-		EndPos:           end,
-		colorScale:       defaultColorScale,
-		ebitenColorScale: defaultColorScale.ToEbitenColorScale(),
-		visible:          true,
+	l := &TextureLine{
+		BeginPos: begin,
+		EndPos:   end,
+		visible:  true,
 	}
+
+	return l
 }
 
 func (l *TextureLine) BoundsRect() gmath.Rect {
-	return lineBoundsRect(l.BeginPos, l.EndPos)
+	bounds := lineBoundsRect(l.BeginPos, l.EndPos)
+	pad := gmath.Vec{X: l.texturePad, Y: l.texturePad}
+	return gmath.Rect{
+		Min: bounds.Min.Sub(pad),
+		Max: bounds.Max.Add(pad),
+	}
 }
 
 func (l *TextureLine) Dispose() {
@@ -51,6 +53,27 @@ func (l *TextureLine) Dispose() {
 
 func (l *TextureLine) IsDisposed() bool {
 	return l.disposed
+}
+
+// GetColorScale is used to retrieve the current color scale value of texture line.
+// Use SetColorScale to change it.
+func (l *TextureLine) GetColorScale() ColorScale {
+	return l.colorScale
+}
+
+// SetColorScale assigns a new ColorScale to this texture line.
+// Use GetColorScale to retrieve the current color scale.
+func (l *TextureLine) SetColorScale(cs ColorScale) {
+	l.colorScale = cs
+}
+
+// GetAlpha is a shorthand for GetColorScale().A expression.
+// It's mostly provided for a symmetry with SetAlpha.
+func (l *TextureLine) GetAlpha() float32 { return l.colorScale.A }
+
+// SetAlpha is a convenient way to change the alpha value of the ColorScale.
+func (l *TextureLine) SetAlpha(a float32) {
+	l.colorScale.A = a
 }
 
 // IsVisible reports whether this texture line is visible.
@@ -65,41 +88,19 @@ func (l *TextureLine) IsVisible() bool { return l.visible }
 // Use IsVisible to get the current flag value.
 func (l *TextureLine) SetVisibility(visible bool) { l.visible = visible }
 
+// SetTexture assigns the repeatable line texture.
+//
+// This texture should loop well if the line's length can be higher
+// than the texture's width.
 func (l *TextureLine) SetTexture(texture *ebiten.Image) {
 	l.texture = texture
+
+	bounds := texture.Bounds()
+	l.texturePad = 2 + math.Ceil((0.5 * float64(bounds.Dy())))
 }
 
 func (l *TextureLine) GetTexture() *ebiten.Image {
 	return l.texture
-}
-
-// GetColorScale is used to retrieve the current color scale value of the texture line.
-// Use SetColorScale to change it.
-func (l *TextureLine) GetColorScale() ColorScale {
-	return l.colorScale
-}
-
-// SetColorScale assigns a new ColorScale to this texture line.
-// Use GetColorScale to retrieve the current color scale.
-func (l *TextureLine) SetColorScale(cs ColorScale) {
-	if l.colorScale == cs {
-		return
-	}
-	l.colorScale = cs
-	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
-}
-
-// GetAlpha is a shorthand for GetColorScale().A expression.
-// It's mostly provided for a symmetry with SetAlpha.
-func (l *TextureLine) GetAlpha() float32 { return l.colorScale.A }
-
-// SetAlpha is a convenient way to change the alpha value of the ColorScale.
-func (l *TextureLine) SetAlpha(a float32) {
-	if l.colorScale.A == a {
-		return
-	}
-	l.colorScale.A = a
-	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
 }
 
 // Draw renders the texture line onto the provided dst image.
@@ -117,68 +118,87 @@ func (l *TextureLine) Draw(dst *ebiten.Image) {
 //
 // The offset is applied to both begin and end positions.
 func (l *TextureLine) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
-	if !l.visible {
-		return
-	}
-	if l.colorScale.A == 0 {
+	if !l.visible || l.colorScale.A == 0 {
 		return
 	}
 
-	pos1 := l.BeginPos.Resolve().Add(opts.Offset)
-	pos2 := l.EndPos.Resolve().Add(opts.Offset)
+	beginVec := l.BeginPos.Resolve().Add(opts.Offset).AsVec32()
+	endVec := l.EndPos.Resolve().Add(opts.Offset).AsVec32()
 
-	textureSize := l.texture.Bounds().Size()
-	textureWidth := float64(textureSize.X)
+	vertices := cache.Global.ScratchVertices[:0]
+	indices := cache.Global.ScratchIndices[:0]
+	defer func() {
+		cache.Global.ScratchVertices = vertices[:0]
+		cache.Global.ScratchIndices = indices[:0]
+	}()
 
-	length := gmath.ClampMax(math.Round(pos1.DistanceTo(pos2)), textureWidth)
-	if length < gmath.Epsilon {
-		return
-	}
+	textureWidth := float32(l.texture.Bounds().Dx())
+	textureHeight := float32(l.texture.Bounds().Dy())
 
-	// In many cases, the line width should not change too often (?)
-	// Doing a subimage is not free, therefore we try to minimize it.
-	// See https://github.com/hajimehoshi/ebiten/issues/2902
-	if ilength := int(length); ilength != l.prevLength {
-		// Use integers here to get some rounding logic.
-		// The lengths of 10.4 and 10.1 are not different enough to care.
-		// And we need int length below for the bounds anyway.
-		l.prevLength = ilength
-		bounds := image.Rectangle{
-			Max: image.Point{X: ilength, Y: textureSize.Y},
+	halfHeight := textureHeight * 0.5
+
+	clr := l.colorScale.premultiplyAlpha()
+
+	step := endVec.DirectionTo(beginVec).Mulf(textureWidth)
+	numSteps := int(beginVec.DistanceTo(endVec)/textureWidth) + 1
+	lastStep := numSteps - 1
+
+	angle := float64(step.Angle())
+
+	// Since rotation is identical for every quad, precompute
+	// the rotation here and copy this data for every quad.
+	// Rotation involves operations like Sincos and several
+	// multiplications, so copying is faster.
+	var geomBase xmath.Geom32
+	geomBase.Translate(0, -halfHeight)
+	geomBase.Rotate(angle)
+
+	currentPos := beginVec
+	idx := uint16(0)
+	for i := 0; i < numSteps; i++ {
+		geom := geomBase
+		geom.Translate(currentPos.X, currentPos.Y)
+
+		x := geom.Tx
+		y := geom.Ty
+		w := textureWidth
+		h := textureHeight
+		if i == lastStep {
+			w = currentPos.DistanceTo(endVec)
 		}
-		l.textureSubImage = l.texture.SubImage(bounds).(*ebiten.Image)
-		fmt.Printf("%p: re-slice image (len=%d)\n", l, ilength)
+
+		vertices = append(vertices,
+			ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+			ebiten.Vertex{DstX: (geom.A1+1)*w + x, DstY: geom.C*w + y, SrcX: w, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+			ebiten.Vertex{DstX: geom.B*h + x, DstY: (geom.D1+1)*h + y, SrcX: 0, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+			ebiten.Vertex{DstX: geom.ApplyX(w, h), DstY: geom.ApplyY(w, h), SrcX: w, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+		)
+		indices = append(indices,
+			idx+0, idx+1, idx+2,
+			idx+1, idx+2, idx+3,
+		)
+
+		currentPos = currentPos.Add(step)
+		idx += 4
 	}
-
-	textureHeight := float64(textureSize.Y)
-	angle := pos1.AngleToPoint(pos2)
-	origin := gmath.Vec{Y: textureHeight * 0.5}
-
-	var drawOptions ebiten.DrawImageOptions
-	drawOptions.ColorScale = l.ebitenColorScale
-
-	drawOptions.GeoM.Translate(-origin.X, -origin.Y)
-	drawOptions.GeoM.Rotate(float64(angle))
-	drawOptions.GeoM.Translate(origin.X, origin.Y)
-
-	drawOptions.GeoM.Translate(pos1.X, pos1.Y)
 
 	if l.Shader == nil || !l.Shader.Enabled {
-		dst.DrawImage(l.textureSubImage, &drawOptions)
+		var drawOptions ebiten.DrawTrianglesOptions
+		if opts.Blend != nil {
+			drawOptions.Blend = *opts.Blend
+		}
+		dst.DrawTriangles(vertices, indices, l.texture, &drawOptions)
 		return
 	}
 
-	srcImageBounds := l.textureSubImage.Bounds()
-	var options ebiten.DrawRectShaderOptions
+	var drawOptions ebiten.DrawTrianglesShaderOptions
 	if opts.Blend != nil {
-		options.Blend = *opts.Blend
+		drawOptions.Blend = *opts.Blend
 	}
-	options.GeoM = drawOptions.GeoM
-	options.ColorScale = drawOptions.ColorScale
-	options.Images[0] = l.textureSubImage
-	options.Images[1] = l.Shader.Texture1
-	options.Images[2] = l.Shader.Texture2
-	options.Images[3] = l.Shader.Texture3
-	options.Uniforms = l.Shader.shaderData
-	dst.DrawRectShader(srcImageBounds.Dx(), srcImageBounds.Dy(), l.Shader.compiled, &options)
+	drawOptions.Images[0] = l.texture
+	drawOptions.Images[1] = l.Shader.Texture1
+	drawOptions.Images[2] = l.Shader.Texture2
+	drawOptions.Images[3] = l.Shader.Texture3
+	drawOptions.Uniforms = l.Shader.shaderData
+	dst.DrawTrianglesShader(vertices, indices, l.Shader.compiled, &drawOptions)
 }

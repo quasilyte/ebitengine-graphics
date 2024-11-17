@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	graphics "github.com/quasilyte/ebitengine-graphics"
 	"github.com/quasilyte/ebitengine-graphics/internal/cache"
+	"github.com/quasilyte/ebitengine-graphics/internal/xmath"
 	"github.com/quasilyte/gmath"
 )
 
@@ -182,7 +183,7 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 		minScaling := tmpl.particleMinScaling
 		scalingStep := tmpl.particleScalingStep
 		for _, p := range e.particles {
-			var pos geom32
+			var pos xmath.Geom32
 			var angle float64
 			{
 				origPos := p.origPos
@@ -225,8 +226,8 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 				clr = clr.Mul(updateColorScaleFunc(ctx))
 			}
 
-			x := pos.tx
-			y := pos.ty
+			x := pos.Tx
+			y := pos.Ty
 			if angle == 0 {
 				vertices = append(vertices,
 					ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
@@ -237,8 +238,8 @@ func (r *Renderer) drawBatch(dst, img *ebiten.Image, opts graphics.DrawOptions, 
 			} else {
 				vertices = append(vertices,
 					ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
-					ebiten.Vertex{DstX: (pos.a1+1)*w + x, DstY: pos.c*w + y, SrcX: w, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
-					ebiten.Vertex{DstX: pos.b*h + x, DstY: (pos.d1+1)*h + y, SrcX: 0, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: (pos.A1+1)*w + x, DstY: pos.C*w + y, SrcX: w, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
+					ebiten.Vertex{DstX: pos.B*h + x, DstY: (pos.D1+1)*h + y, SrcX: 0, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
 					ebiten.Vertex{DstX: pos.ApplyX(w, h), DstY: pos.ApplyY(w, h), SrcX: w, SrcY: h, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
 				)
 			}

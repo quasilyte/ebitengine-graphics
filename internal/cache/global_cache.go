@@ -21,8 +21,8 @@ func init() {
 	// if there is a feature request for it.
 	Global.Rand.SetSeed(271828)
 
-	Global.ScratchVertices = make([]ebiten.Vertex, 0, 24*4)
-	Global.ScratchIndices = make([]uint16, 0, 24*6)
+	Global.ScratchVertices = make([]ebiten.Vertex, 0, 40*4)
+	Global.ScratchIndices = make([]uint16, 0, 40*6)
 }
 
 // cache is a storage that is shared between all
