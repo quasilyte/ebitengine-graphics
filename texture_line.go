@@ -30,9 +30,10 @@ type TextureLine struct {
 
 func NewTextureLine(begin, end gmath.Pos) *TextureLine {
 	l := &TextureLine{
-		BeginPos: begin,
-		EndPos:   end,
-		visible:  true,
+		BeginPos:   begin,
+		EndPos:     end,
+		visible:    true,
+		colorScale: defaultColorScale,
 	}
 
 	return l
