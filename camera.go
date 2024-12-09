@@ -33,8 +33,14 @@ type Camera struct {
 
 	bounds gmath.Rect
 
+	scaledRect gmath.Rect
+	scaledSize gmath.Vec
+
 	areaRect gmath.Rect
 	areaSize gmath.Vec
+
+	scale    float64
+	isScaled bool
 
 	layerMask uint64
 }
@@ -51,11 +57,22 @@ func NewCamera() *Camera {
 	w, h := ebiten.WindowSize()
 	camera := &Camera{
 		layerMask: ^uint64(0),
+		scale:     1,
+		isScaled:  false,
 	}
 	camera.SetViewportRect(gmath.Rect{
 		Max: gmath.Vec{X: float64(w), Y: float64(h)},
 	})
 	return camera
+}
+
+func (c *Camera) GetScale() float64 {
+	return c.scale
+}
+
+func (c *Camera) SetScale(scale float64) {
+	c.scale = scale
+	c.calculateScaledSize()
 }
 
 func (c *Camera) GetBounds() gmath.Rect {
@@ -79,12 +96,29 @@ func (c *Camera) GetViewportRect() gmath.Rect {
 	return c.areaRect
 }
 
+// GetScaledViewportRect returns the camera's rendering rectangle
+// with scaling applied to it.
+//
+// This rectangle is in screen coordinates, meaning it is unaffected by the camera pos.
+func (c *Camera) GetScaledViewportRect() gmath.Rect {
+	return c.scaledRect
+}
+
 // SetViewportRect changes the camera's viewport area to render to.
 //
 // The rect is in screen coordinates.
 func (c *Camera) SetViewportRect(rect gmath.Rect) {
 	c.areaRect = rect
 	c.areaSize = rect.Size()
+	c.calculateScaledSize()
+}
+
+func (c *Camera) calculateScaledSize() {
+	c.scaledRect = gmath.Rect{
+		Max: c.areaRect.Max.Divf(c.scale),
+	}
+	c.scaledSize = c.scaledRect.Size()
+	c.isScaled = c.scale != 1
 }
 
 // GetLayerMask returns the current camera's layer bitmask.
@@ -108,27 +142,27 @@ func (c *Camera) SetLayerMask(mask uint64) {
 }
 
 // GetCenterOffset returns the camera current offset translated
-// to the viewport rect's center.
+// to the scaled viewport rect's center.
 // To get the untranslated position, use [GetOffset].
 //
 // The returned pos is in world coordinates.
 func (c *Camera) GetCenterOffset() gmath.Vec {
-	return c.offset.Add(c.areaSize.Mulf(0.5)).Rounded()
+	return c.offset.Add(c.scaledSize.Mulf(0.5)).Rounded()
 }
 
 // SetCenterOffset centers the camera around given position.
 // After the clamping rules apply, the pos may end up not being in the perfect
-// center of the camera's viewport rect.
+// center of the camera's scaled viewport rect.
 //
 // The return value reports whether the position was actually updated.
 //
 // The pos parameter should be in world coordinates.
 func (c *Camera) SetCenterOffset(pos gmath.Vec) bool {
-	return c.setOffset(pos.Sub(c.areaSize.Mulf(0.5)))
+	return c.setOffset(pos.Sub(c.scaledSize.Mulf(0.5)))
 }
 
 // GetOffset returns the camera current offset.
-// The pos is given for the top-left corner of the camera's viewport rect.
+// The pos is given for the top-left corner of the camera's scaled viewport rect.
 // To get the center position, use [GetCenterOffset].
 //
 // The returned pos is in world coordinates.
@@ -144,6 +178,17 @@ func (c *Camera) GetOffset() gmath.Vec {
 // The pos parameter should be in world coordinates.
 func (c *Camera) SetOffset(pos gmath.Vec) bool {
 	return c.setOffset(pos)
+}
+
+func (c *Camera) ToScreenPos(worldPos gmath.Vec) gmath.Vec {
+	return worldPos.Sub(c.GetOffset()).Mulf(c.scale)
+}
+
+func (c *Camera) ToWorldPos(screenPos gmath.Vec) gmath.Vec {
+	if c.isScaled {
+		return screenPos.Divf(c.scale).Add(c.GetOffset())
+	}
+	return screenPos.Add(c.GetOffset())
 }
 
 // Pan adds the specified camera position delta to the camera's current offset.
@@ -180,7 +225,7 @@ func (c *Camera) clampOffset(offset gmath.Vec) gmath.Vec {
 		return offset
 	}
 
-	offset.X = gmath.Clamp(offset.X, c.bounds.Min.X, c.bounds.Max.X-c.areaSize.X)
-	offset.Y = gmath.Clamp(offset.Y, c.bounds.Min.Y, c.bounds.Max.Y-c.areaSize.Y)
+	offset.X = gmath.Clamp(offset.X, c.bounds.Min.X, c.bounds.Max.X-c.scaledSize.X)
+	offset.Y = gmath.Clamp(offset.Y, c.bounds.Min.Y, c.bounds.Max.Y-c.scaledSize.Y)
 	return offset
 }

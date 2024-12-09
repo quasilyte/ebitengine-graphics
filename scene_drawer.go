@@ -2,6 +2,7 @@ package graphics
 
 import (
 	"image"
+	"math"
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -16,6 +17,7 @@ type SceneDrawer struct {
 	defaultCamera []installedCamera
 
 	viewportRect gmath.Rect
+	maxBufSize   [2]int
 
 	layers []SceneLayerDrawer
 	buf    *ebiten.Image
@@ -44,12 +46,26 @@ type SceneLayerDrawer interface {
 // This default camera is used if no other cameras are available.
 // Use [SceneDrawer.AddCamera] to install custom cameras.
 //
+// A minScale specifies the minimal zoom-out of the camera, e.g.
+// a 0.5 for a double zoom out.
+// This information is needed to prepare the appropriate buffer
+// that could fit all resolutions.
+// When zooming in instead, it doesn't matter as it decreases
+// the visible area.
+// Any values >=1 are essintially ignored.
+// Keep in mind, providing a value like 0.1 means creating an
+// x10 size off-screen image for the temporary buffer.
+//
 // See [SceneDrawer] doc comments for more info.
 //
 // It's advised to only call this function after Ebitengine game has already started.
-func NewSceneDrawer(layers []SceneLayerDrawer) *SceneDrawer {
+func NewSceneDrawer(layers []SceneLayerDrawer, minScale float64) *SceneDrawer {
 	if len(layers) == 0 {
 		panic("can't create a scene drawer with 0 layers")
+	}
+
+	if minScale > 1 {
+		minScale = 1
 	}
 
 	w, h := ebiten.WindowSize()
@@ -59,6 +75,10 @@ func NewSceneDrawer(layers []SceneLayerDrawer) *SceneDrawer {
 	d := &SceneDrawer{
 		layers:       layers,
 		viewportRect: viewportRect,
+		maxBufSize: [2]int{
+			int(math.Round(viewportRect.Max.X / minScale)),
+			int(math.Round(viewportRect.Max.Y / minScale)),
+		},
 	}
 
 	d.defaultCamera = []installedCamera{
@@ -125,7 +145,10 @@ func (d *SceneDrawer) Draw(dst *ebiten.Image) {
 		if cameraDst != dst {
 			// Copy the result to the actual destination.
 			var options ebiten.DrawImageOptions
-			options.GeoM.Translate(camera.c.areaRect.Min.X, camera.c.areaRect.Min.Y)
+			if camera.c.isScaled {
+				options.GeoM.Scale(camera.c.scale, camera.c.scale)
+			}
+			options.GeoM.Translate(camera.c.scaledRect.Min.X, camera.c.scaledRect.Min.Y)
 			dst.DrawImage(cameraDst, &options)
 		}
 	}
@@ -136,22 +159,22 @@ func (d *SceneDrawer) cameraAdjustedBuf(camera *installedCamera, buf *ebiten.Ima
 	// If camera viewport sizes are the same, use it.
 	// This is a very common case.
 	if camera.buf != nil {
-		if camera.cachedRect == camera.c.areaRect {
+		if camera.cachedRect == camera.c.scaledRect {
 			return camera.buf
 		}
 	}
 
 	// Calculate a subimage and cache it.
 	camera.buf = buf.SubImage(image.Rectangle{
-		Max: camera.c.areaSize.ToStd(),
+		Max: camera.c.scaledSize.ToStd(),
 	}).(*ebiten.Image)
-	camera.cachedRect = camera.c.areaRect
+	camera.cachedRect = camera.c.scaledRect
 
 	return camera.buf
 }
 
 func (d *SceneDrawer) cameraNeedsTmpBuf(camera *installedCamera) bool {
-	return camera.c.areaRect != d.viewportRect
+	return camera.c.scaledRect != d.viewportRect
 }
 
 func (d *SceneDrawer) getBuf() *ebiten.Image {
@@ -159,6 +182,6 @@ func (d *SceneDrawer) getBuf() *ebiten.Image {
 		return d.buf
 	}
 
-	d.buf = ebiten.NewImage(int(d.viewportRect.Max.X), int(d.viewportRect.Max.Y))
+	d.buf = ebiten.NewImage(d.maxBufSize[0], d.maxBufSize[1])
 	return d.buf
 }
