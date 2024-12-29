@@ -20,11 +20,11 @@ func (g *promotedGraphics) Draw(dst *ebiten.Image) {
 	g.g.Draw(dst)
 }
 
-func (g *promotedGraphics) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
+func (g *promotedGraphics) DrawWithOptions(dst *ebiten.Image, _ DrawOptions) {
 	g.g.Draw(dst)
 }
 
-func BindDrawDst(o Object, dst *ebiten.Image) *dstBinder {
+func BindDrawDst(o Object, dst *ebiten.Image) Object {
 	return &dstBinder{
 		drawer: o,
 		dst:    dst,
@@ -44,6 +44,6 @@ func (b *dstBinder) Draw(dst *ebiten.Image) {
 	b.DrawWithOptions(dst, DrawOptions{})
 }
 
-func (b *dstBinder) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
+func (b *dstBinder) DrawWithOptions(_ *ebiten.Image, opts DrawOptions) {
 	b.drawer.DrawWithOptions(b.dst, opts)
 }
