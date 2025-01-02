@@ -37,6 +37,8 @@ type Camera struct {
 	areaSize gmath.Vec
 
 	layerMask uint64
+
+	pp PostProcessor
 }
 
 // NewCamera creates a new camera for the [SceneDrawer].
@@ -56,6 +58,10 @@ func NewCamera() *Camera {
 		Max: gmath.Vec{X: float64(w), Y: float64(h)},
 	})
 	return camera
+}
+
+func (c *Camera) SetPostProcessor(pp PostProcessor) {
+	c.pp = pp
 }
 
 func (c *Camera) GetBounds() gmath.Rect {

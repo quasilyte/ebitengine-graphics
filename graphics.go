@@ -23,3 +23,7 @@ type Object interface {
 
 	DrawWithOptions(dst *ebiten.Image, o DrawOptions)
 }
+
+type PostProcessor interface {
+	PostProcess(dst, src *ebiten.Image, o DrawOptions)
+}

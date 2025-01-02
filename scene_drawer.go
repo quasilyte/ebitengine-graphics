@@ -124,9 +124,19 @@ func (d *SceneDrawer) Draw(dst *ebiten.Image) {
 
 		if cameraDst != dst {
 			// Copy the result to the actual destination.
-			var options ebiten.DrawImageOptions
-			options.GeoM.Translate(camera.c.areaRect.Min.X, camera.c.areaRect.Min.Y)
-			dst.DrawImage(cameraDst, &options)
+			if camera.c.pp == nil {
+				// A simple drawing without post-processing.
+				var options ebiten.DrawImageOptions
+				options.GeoM.Translate(camera.c.areaRect.Min.X, camera.c.areaRect.Min.Y)
+				dst.DrawImage(cameraDst, &options)
+			} else {
+				camera.c.pp.PostProcess(dst, cameraDst, DrawOptions{
+					Offset: gmath.Vec{
+						X: camera.c.areaRect.Min.X,
+						Y: camera.c.areaRect.Min.Y,
+					},
+				})
+			}
 		}
 	}
 }

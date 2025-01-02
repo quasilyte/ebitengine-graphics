@@ -336,6 +336,16 @@ func (s *Sprite) GetImage() *ebiten.Image {
 	return s.image
 }
 
+func (s *Sprite) PostProcess(dst, src *ebiten.Image, opts DrawOptions) {
+	if s.image != nil {
+		panic("using PostProcess with a non-nil image Sprite")
+	}
+
+	s.SetImage(src)
+	s.DrawWithOptions(dst, opts)
+	s.image = nil
+}
+
 // Draw renders the associated image onto the provided dst image.
 //
 // This method is a shorthand to DrawWithOptions(dst, {})
