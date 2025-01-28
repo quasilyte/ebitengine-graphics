@@ -24,6 +24,9 @@ func (l *StaticLayer) AddChild(g gsceneGraphics) {
 }
 
 func (l *StaticLayer) Update(_ float64) {
+}
+
+func (l *StaticLayer) filter() {
 	liveObjects := l.objects[:0]
 	for _, o := range l.objects {
 		if o.IsDisposed() {
@@ -35,6 +38,8 @@ func (l *StaticLayer) Update(_ float64) {
 }
 
 func (l *StaticLayer) DrawWithOptions(dst *ebiten.Image, _ DrawOptions) {
+	l.filter()
+
 	for _, o := range l.objects {
 		o.Draw(dst)
 	}

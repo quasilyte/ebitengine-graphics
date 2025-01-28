@@ -12,7 +12,8 @@ import (
 // If something implements only a simple gscene Graphics interface,
 // use [StaticLayer].
 type Layer struct {
-	objects []Object
+	objects    []Object
+	needFilter bool
 }
 
 func NewLayer() *Layer {
@@ -21,9 +22,14 @@ func NewLayer() *Layer {
 
 func (l *Layer) AddChild(g gsceneGraphics) {
 	l.objects = append(l.objects, g.(Object))
+	l.needFilter = true
 }
 
 func (l *Layer) Update(_ float64) {
+	l.needFilter = true
+}
+
+func (l *Layer) filter() {
 	liveObjects := l.objects[:0]
 	for _, o := range l.objects {
 		if o.IsDisposed() {
@@ -35,6 +41,11 @@ func (l *Layer) Update(_ float64) {
 }
 
 func (l *Layer) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
+	if l.needFilter {
+		l.filter()
+	}
+	l.needFilter = false
+
 	for _, o := range l.objects {
 		o.DrawWithOptions(dst, opts)
 	}
