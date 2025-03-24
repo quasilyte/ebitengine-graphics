@@ -6,7 +6,7 @@ toolchain go1.22.9
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.8.4
-	github.com/quasilyte/gmath v0.0.0-20240820191040-5eb37d64dd5e
+	github.com/quasilyte/gmath v0.0.0-20250203120623-541a76da5618
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/image v0.20.0
 )

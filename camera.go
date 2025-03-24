@@ -119,7 +119,7 @@ func (c *Camera) SetLayerMask(mask uint64) {
 //
 // The returned pos is in world coordinates.
 func (c *Camera) GetCenterOffset() gmath.Vec {
-	return c.offset.Add(c.areaSize.Mulf(0.5)).Rounded()
+	return c.offset.Add(c.areaSize.Mulf(0.5)).Floored()
 }
 
 // SetCenterOffset centers the camera around given position.
@@ -170,7 +170,7 @@ func (c *Camera) setOffset(offset gmath.Vec) bool {
 		return false
 	}
 	c.offset = offset
-	c.drawOffset = offset.Rounded()
+	c.drawOffset = offset.Floored()
 	return true
 }
 

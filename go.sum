@@ -42,6 +42,8 @@ github.com/quasilyte/gmath v0.0.0-20240726151200-36b4fe662d15 h1:vKLyUaig6dZui5S
 github.com/quasilyte/gmath v0.0.0-20240726151200-36b4fe662d15/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
 github.com/quasilyte/gmath v0.0.0-20240820191040-5eb37d64dd5e h1:GgOljoK+ooS6WP7C2ZsG+yRQ39BPbqJMCSkFNdMp6N4=
 github.com/quasilyte/gmath v0.0.0-20240820191040-5eb37d64dd5e/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
+github.com/quasilyte/gmath v0.0.0-20250203120623-541a76da5618 h1:NHjcwUKvayhzgB0KUxpVSGKkjRpj5q2sbXNER+3CKnY=
+github.com/quasilyte/gmath v0.0.0-20250203120623-541a76da5618/go.mod h1:EbI+KMbALSVE2s0YFOQpR4uj66zBh9ter5P4CBMSuvA=
 golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 h1:LfspQV/FYTatPTr/3HzIcmiUFH7PGP+OQ6mgDYo3yuQ=
 golang.org/x/exp v0.0.0-20240222234643-814bf88cf225/go.mod h1:CxmFvTBINI24O/j8iY7H1xHzx2i4OsyguNBmN/uPtqc=
 golang.org/x/image v0.16.0 h1:9kloLAKhUufZhA12l5fwnx2NZW39/we1UhBesW433jw=
