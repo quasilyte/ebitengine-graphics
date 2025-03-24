@@ -28,8 +28,7 @@ import (
 // Pay attention to the docs, they should tell you which kind of a position
 // is expected for an argument and/or method's return value.
 type Camera struct {
-	offset     gmath.Vec
-	drawOffset gmath.Vec // Rounded
+	offset gmath.Vec
 
 	bounds gmath.Rect
 
@@ -165,19 +164,18 @@ func (c *Camera) Pan(delta gmath.Vec) bool {
 }
 
 func (c *Camera) setOffset(offset gmath.Vec) bool {
-	offset = c.clampOffset(offset)
+	offset = c.clampOffset(offset).Floored()
 	if c.offset == offset {
 		return false
 	}
 	c.offset = offset
-	c.drawOffset = offset.Floored()
 	return true
 }
 
 func (c *Camera) getDrawOffset() gmath.Vec {
 	return gmath.Vec{
-		X: -c.drawOffset.X,
-		Y: -c.drawOffset.Y,
+		X: -c.offset.X,
+		Y: -c.offset.Y,
 	}
 }
 
