@@ -68,6 +68,10 @@ func NewSceneDrawer(layers []SceneLayerDrawer) *SceneDrawer {
 	return d
 }
 
+func (d *SceneDrawer) SetViewportRect(rect gmath.Rect) {
+	d.viewportRect = rect
+}
+
 func (d *SceneDrawer) AddCamera(camera *Camera) {
 	d.cameras = append(d.cameras, installedCamera{
 		c: camera,
