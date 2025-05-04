@@ -1,6 +1,8 @@
 package graphics
 
 import (
+	"math"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/quasilyte/ebitengine-graphics/internal/cache"
 	"github.com/quasilyte/gmath"
@@ -19,6 +21,7 @@ type Circle struct {
 	dashLength float32
 	dashGap    float32
 	radius     float32
+	drawRadius float32
 	shaderData map[string]any
 
 	centered bool
@@ -45,12 +48,13 @@ func NewCircle(r float64) *Circle {
 		centered:          true,
 		visible:           true,
 		radius:            float32(r),
+		drawRadius:        float32(math.Ceil(r)),
 		outlineColorScale: defaultColorScale,
 		fillColorScale:    transparentColor,
 	}
 
 	c.shaderData = map[string]any{
-		"Radius":       float32(r),
+		"Radius":       c.drawRadius,
 		"OutlineWidth": float32(1),
 		"FillColor":    c.fillColorScale.AsVec4(),
 		"FillOffset":   float32(0),
@@ -122,7 +126,8 @@ func (c *Circle) GetRadius() float64 {
 
 func (c *Circle) SetRadius(r float64) {
 	c.radius = float32(r)
-	c.shaderData["Radius"] = float32(r)
+	c.drawRadius = float32(math.Ceil(r))
+	c.shaderData["Radius"] = c.drawRadius
 }
 
 func (c *Circle) GetOutlineDash() (length, gap float64) {
@@ -209,7 +214,7 @@ func (c *Circle) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 		}
 	}
 
-	r := float64(c.radius)
+	r := float64(c.drawRadius)
 	width := 2 * r
 	pos := opts.Offset.Add(c.Pos.Resolve())
 	if c.centered {
