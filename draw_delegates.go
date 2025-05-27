@@ -24,6 +24,30 @@ func (g *promotedGraphics) DrawWithOptions(dst *ebiten.Image, _ DrawOptions) {
 	g.g.Draw(dst)
 }
 
+func DecorateDraw(o Object, f func(dst *ebiten.Image, opts DrawOptions)) Object {
+	return &decoratedObject{
+		underlying: o,
+		f:          f,
+	}
+}
+
+type decoratedObject struct {
+	underlying Object
+	f          func(dst *ebiten.Image, opts DrawOptions)
+}
+
+func (o *decoratedObject) IsDisposed() bool {
+	return o.underlying.IsDisposed()
+}
+
+func (o *decoratedObject) Draw(dst *ebiten.Image) {
+	o.f(dst, DrawOptions{})
+}
+
+func (o *decoratedObject) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
+	o.f(dst, opts)
+}
+
 func BindDrawDst(o Object, dst *ebiten.Image) Object {
 	return &dstBinder{
 		drawer: o,
