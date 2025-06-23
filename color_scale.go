@@ -77,6 +77,10 @@ func ColorScaleFromColor(c color.NRGBA) ColorScale {
 	return cs
 }
 
+func ColorScaleFromHSL(h, s, l, a float32) ColorScale {
+	return hsl2rgb(h, s, l, a)
+}
+
 func (c ColorScale) String() string {
 	return FormatRGBA(c.Color())
 }
