@@ -140,7 +140,7 @@ func (l *TextureLine) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 
 	clr := l.colorScale.premultiplyAlpha()
 
-	step := endVec.DirectionTo(beginVec).Mulf(textureWidth)
+	step := beginVec.DirectionTo(endVec).Mulf(textureWidth)
 	numSteps := int(beginVec.DistanceTo(endVec)/textureWidth) + 1
 	lastStep := numSteps - 1
 
