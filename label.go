@@ -70,6 +70,7 @@ type Label struct {
 
 type labelShadowData struct {
 	enabled          bool
+	colorScale       ColorScale
 	ebitenColorScale ebiten.ColorScale
 }
 
@@ -122,6 +123,7 @@ func (l *Label) SetShadow(cs ColorScale) {
 	if l.shadow == disabledShadow {
 		l.shadow = &labelShadowData{enabled: true}
 	}
+	l.shadow.colorScale = cs
 	l.shadow.ebitenColorScale = cs.ToEbitenColorScale()
 }
 
@@ -146,12 +148,17 @@ func (l *Label) SetColorScale(cs ColorScale) {
 func (l *Label) GetAlpha() float32 { return l.colorScale.A }
 
 // SetAlpha is a convenient way to change the alpha value of the ColorScale.
+// It also changes the shadow alpha (if any).
 func (l *Label) SetAlpha(a float32) {
 	if l.colorScale.A == a {
 		return
 	}
 	l.colorScale.A = a
 	l.ebitenColorScale = l.colorScale.ToEbitenColorScale()
+	if l.shadow.enabled {
+		l.shadow.colorScale.A = a
+		l.shadow.ebitenColorScale = l.shadow.colorScale.ToEbitenColorScale()
+	}
 }
 
 func (l *Label) Dispose() {
