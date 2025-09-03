@@ -3,6 +3,7 @@ package graphics
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/quasilyte/ebitengine-graphics/internal/cache"
+	"github.com/quasilyte/ebitengine-graphics/internal/xmath"
 	"github.com/quasilyte/gmath"
 )
 
@@ -23,6 +24,12 @@ type ShaderObject struct {
 
 	Pos gmath.Pos
 
+	Rotation *gmath.Rad
+
+	colorScale       ColorScale
+	ebitenColorScale ebiten.ColorScale
+
+	centered bool
 	visible  bool
 	disposed bool
 
@@ -32,7 +39,9 @@ type ShaderObject struct {
 
 func NewShaderObject() *ShaderObject {
 	return &ShaderObject{
-		visible: true,
+		visible:          true,
+		colorScale:       defaultColorScale,
+		ebitenColorScale: defaultColorScale.ToEbitenColorScale(),
 	}
 }
 
@@ -42,6 +51,32 @@ func (o *ShaderObject) IsVisible() bool {
 
 func (o *ShaderObject) SetVisibility(visible bool) {
 	o.visible = visible
+}
+
+func (o *ShaderObject) SetCentered(centered bool) {
+	o.centered = centered
+}
+
+func (o *ShaderObject) GetColorScale() ColorScale {
+	return o.colorScale
+}
+
+func (o *ShaderObject) SetColorScale(cs ColorScale) {
+	if o.colorScale == cs {
+		return
+	}
+	o.colorScale = cs
+	o.ebitenColorScale = o.colorScale.ToEbitenColorScale()
+}
+
+func (o *ShaderObject) GetAlpha() float32 { return o.colorScale.A }
+
+func (o *ShaderObject) SetAlpha(a float32) {
+	if o.colorScale.A == a {
+		return
+	}
+	o.colorScale.A = a
+	o.ebitenColorScale = o.colorScale.ToEbitenColorScale()
 }
 
 func (o *ShaderObject) Dispose() {
@@ -91,8 +126,6 @@ func (o *ShaderObject) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	}()
 
 	pos := opts.Offset.Add(o.Pos.Resolve())
-	x := float32(pos.X)
-	y := float32(pos.Y)
 	w := float32(o.width)
 	h := float32(o.height)
 
@@ -104,14 +137,61 @@ func (o *ShaderObject) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	srcHeight := h
 
 	// Maybe allow the user to provide a custom color scale?
-	clr := defaultColorScale
+	clrR := o.ebitenColorScale.R()
+	clrG := o.ebitenColorScale.G()
+	clrB := o.ebitenColorScale.B()
+	clrA := o.ebitenColorScale.A()
 
-	vertices = append(vertices,
-		ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
-		ebiten.Vertex{DstX: x + w, DstY: y, SrcX: srcWidth, SrcY: 0, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
-		ebiten.Vertex{DstX: x, DstY: y + h, SrcX: 0, SrcY: srcHeight, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
-		ebiten.Vertex{DstX: x + w, DstY: y + h, SrcX: srcWidth, SrcY: srcHeight, ColorR: clr.R, ColorG: clr.G, ColorB: clr.B, ColorA: clr.A},
-	)
+	angle := gmath.Rad(0)
+	if o.Rotation != nil {
+		angle = *o.Rotation
+	}
+
+	if angle == 0 {
+		x := float32(pos.X)
+		y := float32(pos.Y)
+		if o.centered {
+			x -= w * 0.5
+			y -= y * 0.5
+		}
+		vertices = append(vertices,
+			ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+			ebiten.Vertex{DstX: x + w, DstY: y, SrcX: srcWidth, SrcY: 0, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+			ebiten.Vertex{DstX: x, DstY: y + h, SrcX: 0, SrcY: srcHeight, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+			ebiten.Vertex{DstX: x + w, DstY: y + h, SrcX: srcWidth, SrcY: srcHeight, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+		)
+	} else {
+		var geom xmath.Geom32
+		halfWidth := w * 0.5
+		halfHeight := h * 0.5
+		if o.centered {
+			geom.Translate(-halfWidth, -halfHeight)
+		}
+		geom.Rotate(float64(angle))
+		// geom.Translate(halfWidth, halfHeight)
+		geom.Translate(float32(pos.X), float32(pos.Y))
+		if o.centered {
+
+		}
+		x := geom.Tx
+		y := geom.Ty
+		vertices = append(vertices,
+			ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+			ebiten.Vertex{DstX: (geom.A1+1)*w + x, DstY: geom.C*w + y, SrcX: srcWidth, SrcY: 0, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+			ebiten.Vertex{DstX: geom.B*h + x, DstY: (geom.D1+1)*h + y, SrcX: 0, SrcY: srcHeight, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+			ebiten.Vertex{DstX: geom.ApplyX(w, h), DstY: geom.ApplyY(w, h), SrcX: srcWidth, SrcY: srcHeight, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
+		)
+		// pos.Translate(-halfWidth, -halfHeight)
+		// 		if scaling.X != 1 || scaling.Y != 1 {
+		// 			pos.Scale(scaling.X, scaling.Y)
+		// 		}
+		// 		if angle != 0 {
+		// 			pos.Rotate(angle)
+		// 		}
+		// 		pos.Translate(halfWidth, halfHeight)
+		// 		pos.Translate(offset32.X+currentPos.X, offset32.Y+currentPos.Y)
+	}
+
 	indices = append(indices, 0, 1, 2, 1, 2, 3)
 
 	var drawOptions ebiten.DrawTrianglesShaderOptions
