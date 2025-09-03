@@ -168,11 +168,7 @@ func (o *ShaderObject) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 			geom.Translate(-halfWidth, -halfHeight)
 		}
 		geom.Rotate(float64(angle))
-		// geom.Translate(halfWidth, halfHeight)
 		geom.Translate(float32(pos.X), float32(pos.Y))
-		if o.centered {
-
-		}
 		x := geom.Tx
 		y := geom.Ty
 		vertices = append(vertices,
@@ -181,15 +177,6 @@ func (o *ShaderObject) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 			ebiten.Vertex{DstX: geom.B*h + x, DstY: (geom.D1+1)*h + y, SrcX: 0, SrcY: srcHeight, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
 			ebiten.Vertex{DstX: geom.ApplyX(w, h), DstY: geom.ApplyY(w, h), SrcX: srcWidth, SrcY: srcHeight, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
 		)
-		// pos.Translate(-halfWidth, -halfHeight)
-		// 		if scaling.X != 1 || scaling.Y != 1 {
-		// 			pos.Scale(scaling.X, scaling.Y)
-		// 		}
-		// 		if angle != 0 {
-		// 			pos.Rotate(angle)
-		// 		}
-		// 		pos.Translate(halfWidth, halfHeight)
-		// 		pos.Translate(offset32.X+currentPos.X, offset32.Y+currentPos.Y)
 	}
 
 	indices = append(indices, 0, 1, 2, 1, 2, 3)
