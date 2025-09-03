@@ -40,6 +40,7 @@ type ShaderObject struct {
 func NewShaderObject() *ShaderObject {
 	return &ShaderObject{
 		visible:          true,
+		centered:         true,
 		colorScale:       defaultColorScale,
 		ebitenColorScale: defaultColorScale.ToEbitenColorScale(),
 	}
