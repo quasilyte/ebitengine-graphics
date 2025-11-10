@@ -153,7 +153,7 @@ func (o *ShaderObject) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 		y := float32(pos.Y)
 		if o.centered {
 			x -= w * 0.5
-			y -= y * 0.5
+			y -= h * 0.5
 		}
 		vertices = append(vertices,
 			ebiten.Vertex{DstX: x, DstY: y, SrcX: 0, SrcY: 0, ColorR: clrR, ColorG: clrG, ColorB: clrB, ColorA: clrA},
