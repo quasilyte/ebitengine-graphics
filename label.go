@@ -108,6 +108,10 @@ func NewLabel(ff text.Face) *Label {
 	}
 }
 
+func (l *Label) SetFont(ff text.Face) {
+	l.fontID = cache.Global.InternFontFace(ff)
+}
+
 // SetShadow enables rendered text shadows.
 //
 // The shadow support is experimental and is inefficient.
