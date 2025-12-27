@@ -3,6 +3,7 @@ package graphics
 import (
 	"fmt"
 	"image/color"
+	"strconv"
 	"unsafe"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -35,6 +36,31 @@ func FormatRGB(clr color.NRGBA) string {
 
 func FormatRGBA(clr color.NRGBA) string {
 	return fmt.Sprintf("%02x%02x%02x%02x", clr.R, clr.G, clr.B, clr.A)
+}
+
+func ParseRGB(s string) color.NRGBA {
+	result := color.NRGBA{A: 255}
+	if len(s) >= 2 {
+		r, err := strconv.ParseUint(s[:2], 16, 8)
+		if err == nil {
+			result.R = uint8(r)
+		}
+		s = s[2:]
+	}
+	if len(s) >= 2 {
+		g, err := strconv.ParseUint(s[:2], 16, 8)
+		if err == nil {
+			result.G = uint8(g)
+		}
+		s = s[2:]
+	}
+	if len(s) >= 2 {
+		b, err := strconv.ParseUint(s[:2], 16, 8)
+		if err == nil {
+			result.B = uint8(b)
+		}
+	}
+	return result
 }
 
 // RGB returns a ColorScale created from the bits of rgb value.
