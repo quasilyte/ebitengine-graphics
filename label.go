@@ -267,9 +267,9 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 	case AlignVerticalTop:
 		// Do nothing.
 	case AlignVerticalCenter:
-		pos.Y += (containerRect.Height() - l.estimateHeight(numLines)) / 2
+		pos.Y += float64(int(containerRect.Height()-l.estimateHeight(numLines)) / 2)
 	case AlignVerticalBottom:
-		pos.Y += containerRect.Height() - l.estimateHeight(numLines)
+		pos.Y += float64(int(containerRect.Height() - l.estimateHeight(numLines)))
 	}
 
 	if l.shadow.enabled {
