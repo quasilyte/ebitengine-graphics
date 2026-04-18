@@ -165,7 +165,7 @@ func (d *SceneDrawer) cameraAdjustedBuf(camera *installedCamera, buf *ebiten.Ima
 }
 
 func (d *SceneDrawer) cameraNeedsTmpBuf(camera *installedCamera) bool {
-	return camera.c.areaRect != d.viewportRect
+	return camera.c.areaRect != d.viewportRect || camera.c.pp != nil
 }
 
 func (d *SceneDrawer) getBuf() *ebiten.Image {
