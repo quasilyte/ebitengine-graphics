@@ -244,7 +244,8 @@ func (l *Label) SetText(s string) {
 }
 
 func (l *Label) BoundsRect() gmath.Rect {
-	return l.containerRect(l.Pos.Resolve())
+	rect, _ := l.containerRect(l.Pos.Resolve())
+	return rect
 }
 
 func (l *Label) Draw(dst *ebiten.Image) {
@@ -261,7 +262,7 @@ func (l *Label) DrawWithOptions(dst *ebiten.Image, opts DrawOptions) {
 
 	numLines := strings.Count(l.text, "\n") + 1
 
-	containerRect := l.containerRect(pos)
+	containerRect, pos := l.containerRect(pos)
 
 	switch l.GetAlignVertical() {
 	case AlignVerticalTop:
@@ -328,7 +329,7 @@ func (l *Label) drawText(dst *ebiten.Image, blend *ebiten.Blend, rect gmath.Rect
 	}
 }
 
-func (l *Label) containerRect(pos gmath.Vec) gmath.Rect {
+func (l *Label) containerRect(pos gmath.Vec) (gmath.Rect, gmath.Vec) {
 	var containerRect gmath.Rect
 
 	boundsWidth := float64(l.boundsWidth)
@@ -399,7 +400,7 @@ func (l *Label) containerRect(pos gmath.Vec) gmath.Rect {
 		}
 	}
 
-	return containerRect
+	return containerRect, pos
 }
 
 func (l *Label) estimateHeight(numLines int) float64 {
