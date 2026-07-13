@@ -202,7 +202,7 @@ func (e *Emitter) emit(t float32) {
 		}
 
 		scalingSeed := uint8(0)
-		if e.tmpl.needsRandBits&lifetimeRandBit != 0 {
+		if e.tmpl.needsRandBits&scalingRandBit != 0 {
 			scalingSeed = uint8(fastrand(randBits, randSeq))
 			randSeq++
 		}
