@@ -188,14 +188,17 @@ func (e *Emitter) emit(t float32) {
 		}
 
 		lifetime := uint16(0)
-		if e.tmpl.needsRandBits&lifetimeRandBit != 0 {
-			roll := float32(fastrandFloat(randBits, randSeq))
+		{
 			minLifetime := e.tmpl.particleMinLifetime
-			maxLifetime := e.tmpl.particleMaxLifetime
-			v := minLifetime + roll*(maxLifetime-minLifetime)
+			v := minLifetime
+			if e.tmpl.needsRandBits&lifetimeRandBit != 0 {
+				roll := float32(fastrandFloat(randBits, randSeq))
+				maxLifetime := e.tmpl.particleMaxLifetime
+				v = minLifetime + roll*(maxLifetime-minLifetime)
+				randSeq++
+			}
 			v *= e.lifetimeMultiplier
 			lifetime = uint16(v * 1000)
-			randSeq++
 		}
 
 		scalingSeed := uint8(0)
