@@ -48,6 +48,11 @@ func (ctx *SpawnContext) Rand() float64 {
 	return fastrandFloat(randseed1, uint64(ctx.id))
 }
 
+// RandRange returns a pseudo-random value in [min, max] range.
+func (ctx *SpawnContext) RandRange(min, max float64) float64 {
+	return min + ctx.Rand()*(max-min)
+}
+
 func (ctx *SpawnContext) RandUint() uint64 {
 	return fastrand(randseed1, uint64(ctx.id))
 }
