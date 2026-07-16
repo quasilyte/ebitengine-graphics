@@ -134,10 +134,13 @@ func (r *Renderer) drawBucket(dst *ebiten.Image, img *ebiten.Image, opts graphic
 			r.drawBatch(dst, img, opts, batch)
 			batch = batch[:0]
 			batchParticles = 0
-		} else {
-			batch = append(batch, e)
-			batchParticles += n
 		}
+
+		// If this emitter caused a batch flush above,
+		// this append is still needed and will be rendered
+		// as a part of a pre-return flush (see below).
+		batch = append(batch, e)
+		batchParticles += n
 	}
 
 	if len(batch) != 0 {
