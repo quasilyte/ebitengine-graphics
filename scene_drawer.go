@@ -17,8 +17,11 @@ type SceneDrawer struct {
 
 	viewportRect gmath.Rect
 
-	layers []SceneLayerDrawer
-	buf    *ebiten.Image
+	layers   []SceneLayerDrawer
+	buf      *ebiten.Image
+	layerBuf *ebiten.Image
+
+	layerGroupOpen bool
 }
 
 type installedCamera struct {
@@ -117,12 +120,26 @@ func (d *SceneDrawer) Draw(dst *ebiten.Image) {
 		options := DrawOptions{
 			Offset: camera.c.getDrawOffset(),
 		}
+
 		for i, l := range d.layers {
 			if i < 64 {
 				if uint64(1<<i)&camera.c.layerMask == 0 {
 					continue
 				}
 			}
+			useLayerShader := camera.c.layerShader != nil &&
+				(i >= 64 || uint64(1<<i)&camera.c.layerShaderMask != 0)
+
+			if useLayerShader {
+				if !d.layerGroupOpen {
+					d.getLayerBuf().Clear()
+					d.layerGroupOpen = true
+				}
+				l.DrawWithOptions(d.getLayerBuf(), options)
+				continue
+			}
+			d.flushGroup(cameraDst, d.getLayerBuf(), camera)
+
 			l.DrawWithOptions(cameraDst, options)
 		}
 
@@ -143,6 +160,15 @@ func (d *SceneDrawer) Draw(dst *ebiten.Image) {
 			}
 		}
 	}
+}
+
+func (d *SceneDrawer) flushGroup(dst, buf *ebiten.Image, camera *installedCamera) {
+	if !d.layerGroupOpen {
+		return
+	}
+
+	camera.c.layerShader.PostProcess(dst, buf, DrawOptions{})
+	d.layerGroupOpen = false
 }
 
 func (d *SceneDrawer) cameraAdjustedBuf(camera *installedCamera, buf *ebiten.Image) *ebiten.Image {
@@ -175,4 +201,13 @@ func (d *SceneDrawer) getBuf() *ebiten.Image {
 
 	d.buf = ebiten.NewImage(int(d.viewportRect.Max.X), int(d.viewportRect.Max.Y))
 	return d.buf
+}
+
+func (d *SceneDrawer) getLayerBuf() *ebiten.Image {
+	if d.layerBuf != nil {
+		return d.layerBuf
+	}
+
+	d.layerBuf = ebiten.NewImage(int(d.viewportRect.Max.X), int(d.viewportRect.Max.Y))
+	return d.layerBuf
 }

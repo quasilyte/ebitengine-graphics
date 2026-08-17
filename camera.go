@@ -39,6 +39,9 @@ type Camera struct {
 	layerMask uint64
 
 	pp PostProcessor
+
+	layerShader     PostProcessor
+	layerShaderMask uint64
 }
 
 // NewCamera creates a new camera for the [SceneDrawer].
@@ -60,8 +63,23 @@ func NewCamera() *Camera {
 	return camera
 }
 
+// SetPostProcessor configures a PostProcessor for the camera's final result.
+//
+// Setting it to nil effectively disables it.
 func (c *Camera) SetPostProcessor(pp PostProcessor) {
 	c.pp = pp
+}
+
+// SetLayerPostProcessor configures a PostProcessor applied only to the subset of
+// this camera's layers selected by mask (same bit convention as in SetLayerMask).
+//
+// This is independent of SetPostProcessor, which post processes the
+// camera's entire final output. The two can be combined freely.
+//
+// Setting it to nil effectively disables it.
+func (c *Camera) SetLayerPostProcessor(pp PostProcessor, mask uint64) {
+	c.layerShader = pp
+	c.layerShaderMask = mask
 }
 
 func (c *Camera) GetBounds() gmath.Rect {
